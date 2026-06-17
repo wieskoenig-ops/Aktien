@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vault">
+<title>▲ Bottleneck Vault</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #07090f;
+    --bg2: #0d1120;
+    --bg3: #111827;
+    --border: #1a2235;
+    --border2: #1e2d45;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --text4: #475569;
+    --text5: #334155;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --purple-bg: #2e1065;
+    --blue-btn: #1d4ed8;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; font-size: 15px; overflow: hidden; }
+  
+  /* LAYOUT */
+  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  #header { background: #0b0f1a; border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; align-items: center; gap: 12px; height: calc(56px + var(--safe-top)); padding-top: var(--safe-top); flex-shrink: 0; position: relative; z-index: 50; }
+  #main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; }
+  #nav { background: #0b0f1a; border-top: 1px solid var(--border); display: flex; flex-shrink: 0; height: calc(60px + var(--safe-bottom)); padding-bottom: var(--safe-bottom); }
+
+  /* HEADER */
+  .logo { font-weight: 800; font-size: 16px; letter-spacing: 2px; color: var(--text); cursor: pointer; }
+  .spacer { flex: 1; }
+  .toast { font-size: 13px; color: var(--green); font-weight: 600; }
+  .btn-new { background: var(--blue-btn); border: none; color: #fff; padding: 8px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  /* NAV */
+  .nav-tab { flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--text5); transition: color 0.15s; padding: 8px 0; }
+  .nav-tab.active { color: var(--text); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-label { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+
+  /* CARDS */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .card-title { font-size: 11px; color: var(--text4); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 14px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 8px; text-align: center; }
+  .stat-val { font-size: 28px; font-weight: 800; line-height: 1; }
+  .stat-lbl { font-size: 9px; color: var(--text4); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* EARNINGS */
+  .earnings-row { display: flex; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--bg3); cursor: pointer; gap: 10px; }
+  .earnings-row:last-child { border-bottom: none; }
+  .e-ticker { font-size: 13px; font-weight: 800; min-width: 72px; }
+  .e-date { font-size: 12px; color: var(--amber); min-width: 86px; }
+  .e-cat { font-size: 12px; color: var(--text4); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .e-arr { color: var(--text5); font-size: 16px; }
+
+  /* REGION */
+  .region-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+  .r-flag { font-size: 18px; width: 24px; }
+  .r-name { font-size: 13px; color: var(--text2); width: 88px; }
+  .r-bar { flex: 1; background: var(--bg3); border-radius: 4px; height: 5px; }
+  .r-fill { background: var(--blue-btn); height: 5px; border-radius: 4px; }
+  .r-count { font-size: 13px; color: var(--text4); width: 20px; text-align: right; }
+
+  /* BOTTLENECK CHIPS */
+  .bn-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .bn-chip { background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 8px 14px; cursor: pointer; display: flex; align-items: center; gap: 7px; }
+  .bn-flag { font-size: 16px; }
+  .bn-ticker { font-size: 13px; font-weight: 700; color: var(--text2); }
+
+  /* FILTER */
+  .search-input { background: var(--bg2); border: 1px solid var(--border); color: var(--text); padding: 12px 16px; border-radius: 10px; font-size: 15px; outline: none; width: 100%; margin-bottom: 10px; }
+  .filter-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 8px; }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .chip { background: var(--bg2); border: 1px solid var(--border); color: var(--text3); padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; border: 1px solid var(--border); }
+  .chip.active-status { background: var(--blue-btn); border-color: var(--blue-btn); color: #fff; }
+  .chip.active-bn { background: #581c87; border-color: #7c3aed; color: #d8b4fe; }
+  .filter-count { font-size: 12px; color: var(--text5); margin-bottom: 12px; }
+  .region-select { background: var(--bg2); border: 1px solid var(--border); color: var(--text3); padding: 7px 12px; border-radius: 8px; font-size: 13px; outline: none; cursor: pointer; }
+
+  /* POSITION CARDS */
+  .pos-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+  .pos-left { flex: 1; min-width: 0; }
+  .pos-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+  .pos-ticker { font-size: 15px; font-weight: 800; }
+  .bn-badge { font-size: 10px; color: var(--purple); font-weight: 700; background: var(--purple-bg); padding: 1px 6px; border-radius: 4px; }
+  .status-badge { font-size: 12px; padding: 2px 8px; border-radius: 5px; font-weight: 600; }
+  .pos-name { font-size: 14px; color: var(--text2); font-weight: 500; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pos-meta { font-size: 12px; color: var(--text5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pos-date { font-size: 12px; color: var(--amber); margin-top: 4px; }
+  .pos-right { text-align: right; flex-shrink: 0; }
+  .pos-kgv { font-size: 16px; font-weight: 700; color: var(--text); }
+  .pos-kgv-lbl { font-size: 11px; color: var(--text5); }
+  .pos-arr { color: var(--text5); font-size: 20px; margin-top: 4px; }
+
+  /* DETAIL */
+  .detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .btn-back { background: none; border: 1px solid var(--border); color: var(--text3); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 15px; }
+  .detail-title-wrap { flex: 1; }
+  .detail-ticker-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .detail-ticker { font-size: 22px; font-weight: 900; }
+  .detail-name { font-size: 14px; color: var(--text3); margin-top: 3px; }
+  .btn-edit { background: #1a2235; border: none; color: var(--text); padding: 10px 18px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
+  .btn-save { background: var(--blue-btn); border: none; color: #fff; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 700; }
+  .btn-cancel { background: none; border: 1px solid var(--border); color: var(--text3); padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .metrics-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .metric-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 10px; text-align: center; }
+  .metric-val { font-size: 18px; font-weight: 700; color: var(--text); }
+  .metric-lbl { font-size: 10px; color: var(--text4); margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; }
+  .fields-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+  .field-row { display: flex; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--bg3); }
+  .field-row:last-child { border-bottom: none; }
+  .field-lbl { font-size: 12px; color: var(--text4); width: 130px; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .field-val { font-size: 14px; color: var(--text2); flex: 1; }
+  .field-inp { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 14px; outline: none; font-family: inherit; }
+  .field-sel { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 14px; outline: none; }
+  .bn-toggle { border: 1px solid; padding: 7px 16px; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 700; }
+  .bn-toggle.on { background: #581c87; border-color: #7c3aed; color: #d8b4fe; }
+  .bn-toggle.off { background: var(--bg3); border-color: var(--border); color: var(--text3); }
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { background: var(--bg3); color: var(--text4); font-size: 12px; padding: 4px 10px; border-radius: 6px; }
+  .notes-text { font-size: 14px; color: var(--text3); line-height: 1.7; white-space: pre-wrap; }
+  .notes-ta { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 7px; font-size: 14px; outline: none; resize: vertical; font-family: inherit; line-height: 1.6; }
+  .btn-delete { width: 100%; background: none; border: 1px solid #1f1315; color: #7f1d1d; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 8px; }
+  .update-lbl { font-size: 11px; color: var(--text5); text-align: center; margin-bottom: 8px; }
+
+  /* NEW FORM */
+  .new-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .new-title { font-size: 18px; font-weight: 800; flex: 1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <span class="logo" onclick="nav('dash')">▲ VAULT</span>
+    <span class="spacer"></span>
+    <span class="toast" id="toast"></span>
+    <button class="btn-new" onclick="nav('new')">+ Neu</button>
+  </div>
+  <div id="main"></div>
+  <div id="nav">
+    <button class="nav-tab" id="tab-dash" onclick="nav('dash')">
+      <span class="nav-icon">◈</span><span class="nav-label">Dashboard</span>
+    </button>
+    <button class="nav-tab" id="tab-list" onclick="nav('list')">
+      <span class="nav-icon">☰</span><span class="nav-label">Positionen</span>
+    </button>
+    <button class="nav-tab" id="tab-watch" onclick="nav('watch')">
+      <span class="nav-icon">◎</span><span class="nav-label">Watchlist</span>
+    </button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'bottleneck-vault-v1';
+const SC = { Bestand:'#22c55e', Beobachten:'#f59e0b', Watchlist:'#3b82f6' };
+const RF = { Japan:'🇯🇵', USA:'🇺🇸', Deutschland:'🇩🇪', Europa:'🇪🇺', Taiwan:'🇹🇼', China:'🇨🇳', Norwegen:'🇳🇴', Dänemark:'🇩🇰' };
+
+const INITIAL = [
+  {id:"ASML",ticker:"ASML",name:"ASML Holding N.V.",sektor:"Halbleiter / Equipment",thema:"EUV-Monopol",region:"Europa",währung:"EUR",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"EUV-Lithographie-Monopol (100% Weltmarkt)",kurs:1145,kgv_forward:41,kgv_median_5j:51,dividende:0.90,bewertung:"fair",nächstes_earnings:"2026-07-17",catalyst:"Q2 2026 Earnings",einstieg_ziel:"",tags:["bottleneck","halbleiter","euv","europa"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"NVDA",ticker:"NVDA",name:"NVIDIA Corporation",sektor:"Halbleiter / AI-Infrastruktur",thema:"GPU-Monopol / CUDA / Data Center",region:"USA",währung:"USD",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"GPU-Monopol / CUDA-Ökosystem-Lock-in",kurs:225,kgv_forward:27,kgv_median_5j:55,dividende:0.02,bewertung:"historisch-günstig",nächstes_earnings:"2026-08-20",catalyst:"Blackwell-Ramp / Q2 FY2027",einstieg_ziel:"",tags:["bottleneck","halbleiter","gpu","usa"],notizen:"",letzte_aktualisierung:"2026-05-18"},
+  {id:"TSMC",ticker:"TSMC",name:"Taiwan Semiconductor",sektor:"Halbleiter / Foundry",thema:"Foundry-Monopol / Advanced Node",region:"Taiwan",währung:"TWD",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"Advanced Node Foundry (N3/N2 Monopol)",kurs:185,kgv_forward:22,kgv_median_5j:25,dividende:1.70,bewertung:"fair",nächstes_earnings:"2026-07-17",catalyst:"CoWoS-Kapazität / Apple N3",einstieg_ziel:"",tags:["bottleneck","halbleiter","taiwan","foundry"],notizen:"CoWoP-Risiko durch TSMC-eigene ABF-Entwicklung — 3-5J Horizont beobachten",letzte_aktualisierung:"2026-05-17"},
+  {id:"2802.T",ticker:"2802.T",name:"Ajinomoto Co.",sektor:"Materialien / Halbleiter-Substrate",thema:"ABF-Substrat-Monopol (~97%)",region:"Japan",währung:"JPY",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"ABF-Substrat-Monopol (~97% Weltmarkt)",kurs:null,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"CoWoS-Kapazitätserweiterung",einstieg_ziel:"",tags:["bottleneck","halbleiter","japan","abf"],notizen:"CoWoP-Technologierisiko durch TSMC auf 3-5J Horizont. Position halten, Thesis monitoren.",letzte_aktualisierung:"2026-05-17"},
+  {id:"4063.T",ticker:"4063.T",name:"Shin-Etsu Chemical",sektor:"Halbleiter / Chemie",thema:"Silicon Wafer Duopol / PVC",region:"Japan",währung:"JPY",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"Silicon Wafer Duopol (mit Sumco)",kurs:6200,kgv_forward:15,kgv_median_5j:18,dividende:2.00,bewertung:"unterbewertet",nächstes_earnings:"",catalyst:"Halbleiter-Upcycle",einstieg_ziel:"",tags:["bottleneck","halbleiter","japan","silizium"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"STM",ticker:"STM",name:"STMicroelectronics N.V.",sektor:"Halbleiter",thema:"SiC / Automotive / Embedded",region:"Europa",währung:"USD",status:"Bestand",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"SiC-Duopol + proprietäre Prozesstechnologie",kurs:64,kgv_forward:42,kgv_median_5j:32,dividende:0.50,bewertung:"fair",nächstes_earnings:"2026-07-23",catalyst:"Data Center >$500 Mio. 2026 / NXP MEMS",einstieg_ziel:"",tags:["bottleneck","halbleiter","sic","automotive","europa"],notizen:"Q2 Earnings 23. Juli als nächster Schlüsselkatalysator für Data-Center-Re-Rating",letzte_aktualisierung:"2026-05-17"},
+  {id:"ARM",ticker:"ARM",name:"ARM Holdings",sektor:"Halbleiter / IP-Architektur",thema:"CPU-Architektur-Monopol",region:"USA",währung:"USD",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"CPU-ISA-Monopol + CUDA-Ökosystem",kurs:212,kgv_forward:110,kgv_median_5j:55,dividende:0.02,bewertung:"fair",nächstes_earnings:"2026-07-29",catalyst:"Q1 FY2027 Earnings / Eigener Chip",einstieg_ziel:"",tags:["bottleneck","halbleiter","ai-infrastruktur","usa"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"MERCK.DE",ticker:"MERCK.DE",name:"Merck KGaA",sektor:"Pharma / Spezialchemie",thema:"ALD-Precursor / Halbleiter-Elektronik",region:"Deutschland",währung:"EUR",status:"Bestand",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"Spezialgas / ALD-Precursor (Kaohsiung)",kurs:155,kgv_forward:18,kgv_median_5j:22,dividende:1.80,bewertung:"unterbewertet",nächstes_earnings:"",catalyst:"Kaohsiung-Ramp / Electronics ~25% EBITDA",einstieg_ziel:"",tags:["bottleneck","pharma","halbleiter","deutschland"],notizen:"Watchlist-Entry €107-110 noch nicht erreicht (derzeit ~20% darüber)",letzte_aktualisierung:"2026-05-17"},
+  {id:"LIN",ticker:"LIN",name:"Linde plc",sektor:"Industriegase / Chemie",thema:"Halbleiter-Spezialgas / Wasserstoff",region:"USA",währung:"USD",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"Oligopol Industriegase (mit Air Liquide / Air Products)",kurs:470,kgv_forward:28,kgv_median_5j:28,dividende:1.40,bewertung:"fair",nächstes_earnings:"",catalyst:"Halbleiter-Capex-Zyklus",einstieg_ziel:"",tags:["bottleneck","industriegase","halbleiter","usa"],notizen:"Ursprüngliche Wasserstoff-Thesis nicht eingetroffen, Position dennoch gehalten",letzte_aktualisierung:"2026-05-17"},
+  {id:"GOOGL",ticker:"GOOGL",name:"Alphabet Inc.",sektor:"Technologie / Werbung",thema:"AI-Plattform / Search-Monopol / Cloud",region:"USA",währung:"USD",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"Search-Monopol + AI-Stack (DeepMind)",kurs:175,kgv_forward:22,kgv_median_5j:25,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"AI Overviews Monetarisierung / DeepMind World Models",einstieg_ziel:"",tags:["bottleneck","technologie","usa","ai"],notizen:"Dual-Exposure: LLM-Revenue + DeepMind World Models Optionalität",letzte_aktualisierung:"2026-05-17"},
+  {id:"ENR.DE",ticker:"ENR.DE",name:"Siemens Energy AG",sektor:"Energie / Grid-Technologie",thema:"Grid Technologies / AI-Infrastruktur Power",region:"Deutschland",währung:"EUR",status:"Bestand",conviction:"hoch",bottleneck:false,bottleneck_typ:"Grid-Equipment + Gas-Turbinen (Oligopol)",kurs:158,kgv_forward:null,kgv_median_5j:null,dividende:0.46,bewertung:"fair",nächstes_earnings:"2026-08-05",catalyst:"Q3 FY2026 Earnings / Record Orders €17,7 Mrd.",einstieg_ziel:"",tags:["grid","energie","deutschland","ai-infrastruktur"],notizen:"15% Positionsgröße durch Kursanstieg seit IPO 2020. Trim auf 8-10% erwägen. Seltene-Erden-Risiko (Gamesa) neu aufgetaucht. Analysten-Konsens PT €195.",letzte_aktualisierung:"2026-06-17"},
+  {id:"6954.T",ticker:"6954.T",name:"FANUC Corporation",sektor:"Industrie / Factory Automation",thema:"Robotik / CNC / Industrieautomation",region:"Japan",währung:"JPY",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"CNC-Monopol (~65% Weltmarkt)",kurs:3780,kgv_forward:32,kgv_median_5j:31,dividende:2.00,bewertung:"fair",nächstes_earnings:"2026-07-01",catalyst:"FY2026 Q1 Earnings / Robotik-Hype-Zyklus",einstieg_ziel:"",tags:["bottleneck","robotik","japan","cnc"],notizen:"",letzte_aktualisierung:"2026-05-18"},
+  {id:"6506.T",ticker:"6506.T",name:"Yaskawa Electric",sektor:"Industrie / Robotik",thema:"Servo-Systeme / Robotik",region:"Japan",währung:"JPY",status:"Bestand",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"Servo-Duopol (mit Mitsubishi Electric)",kurs:null,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"Robotik-Hype-Zyklus ~12 Monate",einstieg_ziel:"",tags:["bottleneck","robotik","japan"],notizen:"Exit-Plan bei Robotik-Hype-Peak ~12 Monate",letzte_aktualisierung:"2026-05-17"},
+  {id:"6268.T",ticker:"6268.T",name:"Nabtesco Corporation",sektor:"Industrie / Präzisionsgetriebe",thema:"RV-Getriebe-Monopol",region:"Japan",währung:"JPY",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"RV-Getriebe-Monopol (~60% Weltmarkt)",kurs:null,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"Humanoid-Robotik-Nachfrage",einstieg_ziel:"",tags:["bottleneck","robotik","japan","getriebe"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"6324.T",ticker:"6324.T",name:"Harmonic Drive Systems",sektor:"Industrie / Präzisionsgetriebe",thema:"Strain-Wave-Getriebe-Monopol",region:"Japan",währung:"JPY",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"Strain-Wave-Getriebe-Monopol (~80% Weltmarkt)",kurs:null,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"Humanoid-Robotik-Nachfrage",einstieg_ziel:"",tags:["bottleneck","robotik","japan","getriebe"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"6861.T",ticker:"6861.T",name:"Keyence Corporation",sektor:"Industrie / Sensorik",thema:"Industriesensoren / Machine Vision",region:"Japan",währung:"JPY",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"Machine-Vision-Oligopol + DTC-Modell",kurs:null,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"leicht-überbewertet",nächstes_earnings:"",catalyst:"Factory-Automation-Upcycle",einstieg_ziel:"",tags:["bottleneck","robotik","japan","sensorik"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"SHA0.DE",ticker:"SHA0.DE",name:"Schaeffler AG",sektor:"Industrie / Automotive",thema:"Robotik / Präzisionsantriebe / KOID",region:"Deutschland",währung:"EUR",status:"Bestand",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"Wälzlager + Präzisionskomponenten (KOID #3)",kurs:6,kgv_forward:10,kgv_median_5j:14,dividende:3.50,bewertung:"unterbewertet",nächstes_earnings:"",catalyst:"Humanoid-Nachfrage / Q2 Earnings",einstieg_ziel:"",tags:["bottleneck","robotik","deutschland","automotive"],notizen:"Gehalten seit Anfang 2026",letzte_aktualisierung:"2026-05-17"},
+  {id:"SIE.DE",ticker:"SIE.DE",name:"Siemens AG",sektor:"Industrie / Automatisierung",thema:"Digitale Industrie / Factory Automation",region:"Deutschland",währung:"EUR",status:"Bestand",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",kurs:null,kgv_forward:18,kgv_median_5j:20,dividende:2.50,bewertung:"fair",nächstes_earnings:"",catalyst:"Q3 2026 Earnings / US Data Center Orders +54%",einstieg_ziel:"",tags:["industrie","deutschland","automation"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"SHL.DE",ticker:"SHL.DE",name:"Siemens Healthineers",sektor:"Medizintechnik",thema:"Bildgebung / China Diagnostics",region:"Deutschland",währung:"EUR",status:"Bestand",conviction:"neutral",bottleneck:false,bottleneck_typ:"",kurs:null,kgv_forward:22,kgv_median_5j:30,dividende:1.20,bewertung:"unterbewertet",nächstes_earnings:"2026-07-31",catalyst:"Q3 Earnings 31.07.2026 — China Catalyst",einstieg_ziel:"",tags:["medizintechnik","deutschland","china"],notizen:"Kleine ~1% Position, unter Wasser. Hold bis Earnings-Katalysator.",letzte_aktualisierung:"2026-05-17"},
+  {id:"9984.T",ticker:"9984.T",name:"SoftBank Group",sektor:"Technologie-Holding",thema:"Physical AI / ARM / ABB Robotics",region:"Japan",währung:"JPY",status:"Bestand",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",kurs:null,kgv_forward:null,kgv_median_5j:null,dividende:0.50,bewertung:"spekulativ",nächstes_earnings:"",catalyst:"ABB Robotics Closing H2 2026",einstieg_ziel:"",tags:["japan","robotik","ai","holding"],notizen:"Reframed als 'Physical AI' Holding nach ABB Robotics Akquisition",letzte_aktualisierung:"2026-05-17"},
+  {id:"SOI.PA",ticker:"SOI.PA",name:"Soitec S.A.",sektor:"Halbleiter / Substrate",thema:"SOI-Wafer-Monopol",region:"Europa",währung:"EUR",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"SOI-Wafer-Monopol",kurs:null,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"RF-SOI Nachfrage / 5G",einstieg_ziel:"",tags:["bottleneck","halbleiter","europa","substrate"],notizen:"Gekauft ~€32, >400% gestiegen. Teilgewinnmitnahme diskutiert aber nicht bestätigt.",letzte_aktualisierung:"2026-05-17"},
+  {id:"0300.HK",ticker:"0300.HK",name:"Midea Group",sektor:"Robotik / Haushaltsgeräte",thema:"China Robotik-Proxy / KUKA",region:"China",währung:"HKD",status:"Bestand",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",kurs:null,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"KUKA-Expansion / Robotik-Hype",einstieg_ziel:"",tags:["china","robotik","kuka"],notizen:"Gehalten als China Robotics Proxy via KUKA-Eigentümerschaft",letzte_aktualisierung:"2026-05-17"},
+  {id:"BYD",ticker:"BYD",name:"BYD Company Ltd.",sektor:"Automotive / Technologie",thema:"EV / Robotik / Tech",region:"China",währung:"HKD",status:"Bestand",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",kurs:null,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"Robotik-Expansion",einstieg_ziel:"",tags:["china","ev","robotik"],notizen:"Unter Robotik/Tech-Thesis gehalten",letzte_aktualisierung:"2026-05-17"},
+  {id:"XYL",ticker:"XYL",name:"Xylem Inc.",sektor:"Wasser / Infrastruktur",thema:"Wasser-Infrastruktur-Technologie",region:"USA",währung:"USD",status:"Bestand",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",kurs:null,kgv_forward:22,kgv_median_5j:28,dividende:1.10,bewertung:"fair",nächstes_earnings:"",catalyst:"China Guidance Erholung",einstieg_ziel:"",tags:["wasser","usa","infrastruktur"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"VIE.PA",ticker:"VIE.PA",name:"Veolia Environnement",sektor:"Wasser / Abfall / Energie",thema:"Wasser-Infrastruktur / PFAS",region:"Europa",währung:"EUR",status:"Bestand",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",kurs:null,kgv_forward:15,kgv_median_5j:18,dividende:5.00,bewertung:"fair",nächstes_earnings:"",catalyst:"PFAS-Regulierung EU / Rechenzentrum-Kühlwasser",einstieg_ziel:"",tags:["wasser","europa","infrastruktur","dividende"],notizen:"Indirekte AI-Infra-Exposition via Rechenzentrum-Kühlwasser unterschätzt",letzte_aktualisierung:"2026-05-17"},
+  {id:"TOM.OL",ticker:"TOM.OL",name:"Tomra Systems",sektor:"Kreislaufwirtschaft / Recycling",thema:"AI-Sorting / GAINNEXT-Moat",region:"Norwegen",währung:"NOK",status:"Bestand",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"RVM-Near-Monopol + proprietäre Datenbasis (GAINNEXT)",kurs:140,kgv_forward:28,kgv_median_5j:35,dividende:1.50,bewertung:"unterbewertet",nächstes_earnings:"",catalyst:"EU Plastik-Exportverbot Nov 2026",einstieg_ziel:"",tags:["bottleneck","recycling","norwegen"],notizen:"Levermann Score -3, aber Bottleneck-Thesis (RVM-Monopol + proprietärer Datemoat) intakt",letzte_aktualisierung:"2026-05-17"},
+  {id:"NOVO-B.CO",ticker:"NOVO-B.CO",name:"Novo Nordisk",sektor:"Pharma / GLP-1",thema:"GLP-1 Marktführer / Contrarian",region:"Dänemark",währung:"DKK",status:"Bestand",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",kurs:null,kgv_forward:12,kgv_median_5j:25,dividende:3.20,bewertung:"historisch-günstig",nächstes_earnings:"",catalyst:"GLP-1 Nachfrage / Ozempic Konkurrenz",einstieg_ziel:"",tags:["pharma","dänemark","glp1","contrarian"],notizen:"Contrarian-Position bei historisch niedrigem KGV ~12x vs. 24x Median",letzte_aktualisierung:"2026-05-17"},
+  {id:"KO",ticker:"KO",name:"Coca-Cola Co.",sektor:"Consumer Staples",thema:"Brand-Monopol / Dividende / Core",region:"USA",währung:"USD",status:"Bestand",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",kurs:null,kgv_forward:24,kgv_median_5j:24,dividende:3.10,bewertung:"fair",nächstes_earnings:"",catalyst:"Dividendenerhöhung",einstieg_ziel:"",tags:["consumer-staples","usa","dividende","core"],notizen:"Core Long-Term Buy-and-Hold. Entry April 2026.",letzte_aktualisierung:"2026-05-17"},
+  {id:"SRT3.DE",ticker:"SRT3.DE",name:"Sartorius AG",sektor:"Bioprozesstechnik",thema:"Bottleneck / Biopharma-Infrastruktur",region:"Deutschland",währung:"EUR",status:"Bestand",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"Oligopol / Duopol (mit Cytiva)",kurs:235,kgv_forward:39,kgv_median_5j:61,dividende:0.60,bewertung:"unterbewertet",nächstes_earnings:"2026-07-17",catalyst:"Q2 2026 Earnings / GLP-1 Nachfrage",einstieg_ziel:"",tags:["bottleneck","bioprozesstechnik","deutschland"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"AVGO",ticker:"AVGO",name:"Broadcom Inc.",sektor:"Halbleiter / Software",thema:"Custom AI ASIC / Netzwerk-Chips",region:"USA",währung:"USD",status:"Watchlist",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"Custom ASIC Duopol + Netzwerk-Monopol",kurs:null,kgv_forward:25,kgv_median_5j:35,dividende:1.50,bewertung:"leicht-überbewertet",nächstes_earnings:"",catalyst:"AI ASIC Aufträge / VMware Integration",einstieg_ziel:"180-200",tags:["bottleneck","halbleiter","usa","asic"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"CDNS",ticker:"CDNS",name:"Cadence Design Systems",sektor:"Halbleiter / EDA-Software",thema:"EDA-Duopol / AI-Chip-Design",region:"USA",währung:"USD",status:"Beobachten",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"Oligopol / de-facto-Duopol (mit Synopsys)",kurs:361,kgv_forward:46,kgv_median_5j:74,dividende:null,bewertung:"fair",nächstes_earnings:"2026-07-21",catalyst:"Q2 2026 Earnings",einstieg_ziel:"<330",tags:["bottleneck","halbleiter","eda","usa"],notizen:"",letzte_aktualisierung:"2026-05-17"},
+  {id:"7012.T",ticker:"7012.T",name:"Kawasaki Heavy Industries",sektor:"Industriekonglomerat / Robotik",thema:"Japan-Konglomerat / Robotik / Wasserstoff",region:"Japan",währung:"JPY",status:"Beobachten",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",kurs:3417,kgv_forward:26,kgv_median_5j:20,dividende:1.45,bewertung:"fair",nächstes_earnings:"2026-08-11",catalyst:"FY2027 Guidance / Wasserstoff / Governance",einstieg_ziel:"0.5-1%",tags:["japan","robotik","wasserstoff"],notizen:"0,5-1% Sizing erwogen. Robotik + Japan Governance Katalysator Thesis.",letzte_aktualisierung:"2026-05-18"},
+  {id:"6762.T",ticker:"6762.T",name:"TDK Corporation",sektor:"Elektronische Komponenten / Magnetmaterialien",thema:"HDD-Köpfe-Monopol / NdFeB-Magnete / REE",region:"Japan",währung:"JPY",status:"Beobachten",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"HDD-Köpfe-Monopol (einziger externer Lieferant) + NdFeB-Oligopol ex-China",kurs:3741,kgv_forward:40,kgv_median_5j:null,dividende:0.50,bewertung:"leicht-überbewertet",nächstes_earnings:"2026-08-05",catalyst:"Q1 FY2027 Earnings / REE-Diversifizierungsaufträge",einstieg_ziel:"2900-3100",tags:["bottleneck","japan","magnetmaterialien","ree","ai-infrastruktur"],notizen:"Siemens Gamesa Liefervertrag bestätigt (2025). Kurs 19% über Analysten-Konsens ¥3.151. Entry bei Rücksetzer. Ursprung: Kassettenband-Hersteller → Magnetmaterialien-Monopol (Ajinomoto-Analogie).",letzte_aktualisierung:"2026-06-17"},
+];
+
+// State
+let data = [], currentView = 'dash', filterStatus = 'alle', filterBN = 'alle', filterRegion = 'alle', searchQ = '', selected = null, editData = null, editMode = false;
+
+function load() {
+  try { const s = localStorage.getItem(STORAGE_KEY); data = s ? JSON.parse(s) : INITIAL; } catch { data = INITIAL; }
+  if (!localStorage.getItem(STORAGE_KEY)) save();
+  render();
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); showToast('✓'); } catch { showToast('⚠'); }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  setTimeout(() => t.textContent = '', 1800);
+}
+
+function nav(v) {
+  currentView = v;
+  ['dash','list','watch'].forEach(id => {
+    const el = document.getElementById('tab-' + id);
+    if (el) el.classList.toggle('active', id === v);
+  });
+  render();
+}
+
+function getFiltered() {
+  const statusOrder = ['Bestand','Beobachten','Watchlist'];
+  const convOrder = {hoch:0,'moderat-bullish':1,neutral:2,'neutral-spekulativ':3,'leicht-bullish':4};
+  return [...data].filter(p => {
+    if (filterStatus !== 'alle' && p.status !== filterStatus) return false;
+    if (filterRegion !== 'alle' && p.region !== filterRegion) return false;
+    if (filterBN === 'ja' && !p.bottleneck) return false;
+    if (searchQ) {
+      const q = searchQ.toLowerCase();
+      if (!p.ticker.toLowerCase().includes(q) && !p.name.toLowerCase().includes(q) && !p.thema.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  }).sort((a,b) => {
+    const sd = statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+    return sd !== 0 ? sd : (convOrder[a.conviction]??9) - (convOrder[b.conviction]??9);
+  });
+}
+
+function h(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function render() {
+  const main = document.getElementById('main');
+  if (currentView === 'dash') main.innerHTML = renderDash();
+  else if (currentView === 'list') main.innerHTML = renderList(getFiltered());
+  else if (currentView === 'watch') main.innerHTML = renderList(data.filter(p => p.status !== 'Bestand'), true);
+  else if (currentView === 'detail') main.innerHTML = renderDetail();
+  else if (currentView === 'new') main.innerHTML = renderNew();
+  bindEvents();
+}
+
+function renderDash() {
+  const bc = data.filter(p=>p.status==='Bestand').length;
+  const oc = data.filter(p=>p.status==='Beobachten').length;
+  const wc = data.filter(p=>p.status==='Watchlist').length;
+  const bnc = data.filter(p=>p.bottleneck).length;
+  const upcoming = [...data].filter(p=>p.nächstes_earnings).sort((a,b)=>a.nächstes_earnings.localeCompare(b.nächstes_earnings)).slice(0,6);
+  const regionMap = {};
+  data.filter(p=>p.status==='Bestand').forEach(p=>{regionMap[p.region]=(regionMap[p.region]||0)+1;});
+  const regions = Object.entries(regionMap).sort((a,b)=>b[1]-a[1]);
+
+  return `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" style="color:#22c55e">${bc}</div><div class="stat-lbl">Bestand</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#f59e0b">${oc}</div><div class="stat-lbl">Beobachten</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#3b82f6">${wc}</div><div class="stat-lbl">Watchlist</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#a855f7">${bnc}</div><div class="stat-lbl">Bottleneck</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Nächste Earnings</div>
+      ${upcoming.map(p=>`
+        <div class="earnings-row" data-id="${h(p.id)}">
+          <span class="e-ticker" style="color:${SC[p.status]||'#94a3b8'}">${h(p.ticker)}</span>
+          <span class="e-date">${h(p.nächstes_earnings)}</span>
+          <span class="e-cat">${h(p.catalyst)}</span>
+          <span class="e-arr">›</span>
+        </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">Bestand nach Region</div>
+      ${regions.map(([r,c])=>`
+        <div class="region-row">
+          <span class="r-flag">${RF[r]||'🌍'}</span>
+          <span class="r-name">${h(r)}</span>
+          <div class="r-bar"><div class="r-fill" style="width:${Math.round(c/bc*100)}%"></div></div>
+          <span class="r-count">${c}</span>
+        </div>`).join('')}
+    </div>
+    <div class="card">
+      <div class="card-title">Bottleneck — Bestand</div>
+      <div class="bn-grid">
+        ${data.filter(p=>p.status==='Bestand'&&p.bottleneck).map(p=>`
+          <div class="bn-chip" data-id="${h(p.id)}">
+            <span class="bn-flag">${RF[p.region]||''}</span>
+            <span class="bn-ticker">${h(p.ticker)}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderList(items, watchOnly=false) {
+  const regions = [...new Set(data.map(p=>p.region))].sort();
+  return `
+    ${!watchOnly ? `
+    <input class="search-input" id="search-inp" placeholder="Suche Ticker, Name, Thema…" value="${h(searchQ)}">
+    <div class="filter-chips">
+      ${['alle','Bestand','Beobachten','Watchlist'].map(s=>`
+        <button class="chip ${filterStatus===s?'active-status':''}" data-status="${s}">${s==='alle'?'Alle':s}</button>`).join('')}
+      <button class="chip ${filterBN==='ja'?'active-bn':''}" id="bn-toggle">▲ Bottleneck</button>
+      <select class="region-select" id="region-sel">
+        <option value="alle">Alle Regionen</option>
+        ${regions.map(r=>`<option value="${h(r)}" ${filterRegion===r?'selected':''}>${RF[r]||''} ${h(r)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="filter-count">${items.length} Positionen</div>` : `<div class="filter-count" style="margin-bottom:12px">${items.length} Positionen</div>`}
+    ${items.map(p=>`
+      <div class="pos-card" data-id="${h(p.id)}">
+        <div class="pos-left">
+          <div class="pos-top">
+            <span class="pos-ticker" style="color:${SC[p.status]||'#94a3b8'}">${h(p.ticker)}</span>
+            ${p.bottleneck?`<span class="bn-badge">▲ BN</span>`:''}
+            <span class="status-badge" style="background:${(SC[p.status]||'#64748b')}18;color:${SC[p.status]||'#64748b'}">${h(p.status)}</span>
+          </div>
+          <div class="pos-name">${h(p.name)}</div>
+          <div class="pos-meta">${RF[p.region]||''} ${h(p.region)} · ${h(p.thema)}</div>
+          ${p.nächstes_earnings?`<div class="pos-date">📅 ${h(p.nächstes_earnings)}</div>`:''}
+        </div>
+        <div class="pos-right">
+          ${p.kgv_forward?`<div class="pos-kgv">${p.kgv_forward}×</div><div class="pos-kgv-lbl">KGV fwd</div>`:''}
+          <div class="pos-arr">›</div>
+        </div>
+      </div>`).join('')}`;
+}
+
+function renderDetail() {
+  const p = editMode ? editData : selected;
+  if (!p) return '';
+  const fieldVal = (lbl, key, val) => `
+    <div class="field-row">
+      <span class="field-lbl">${lbl}</span>
+      ${editMode
+        ? `<input class="field-inp" data-key="${key}" value="${h(editData[key]??'')}">`
+        : `<span class="field-val">${h(val??'—')}</span>`}
+    </div>`;
+  const fieldSel = (lbl, key, opts) => `
+    <div class="field-row">
+      <span class="field-lbl">${lbl}</span>
+      ${editMode
+        ? `<select class="field-sel" data-key="${key}">${opts.map(o=>`<option ${editData[key]===o?'selected':''}>${h(o)}</option>`).join('')}</select>`
+        : `<span class="field-val">${h(selected[key]??'—')}</span>`}
+    </div>`;
+  return `
+    <div class="detail-header">
+      <button class="btn-back" id="btn-back">←</button>
+      <div class="detail-title-wrap">
+        <div class="detail-ticker-row">
+          <span class="detail-ticker" style="color:${SC[selected.status]||'#94a3b8'}">${h(selected.ticker)}</span>
+          ${selected.bottleneck?`<span class="bn-badge" style="font-size:11px;padding:2px 8px">▲ BOTTLENECK</span>`:''}
+          <span class="status-badge" style="background:${(SC[selected.status]||'#64748b')}22;color:${SC[selected.status]||'#64748b'}">${h(selected.status)}</span>
+        </div>
+        <div class="detail-name">${h(selected.name)}</div>
+      </div>
+      ${!editMode
+        ? `<button class="btn-edit" id="btn-edit-mode">Bearbeiten</button>`
+        : `<div style="display:flex;gap:8px"><button class="btn-save" id="btn-save-edit">Speichern</button><button class="btn-cancel" id="btn-cancel-edit">✕</button></div>`}
+    </div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-val">${selected.kgv_forward?selected.kgv_forward+'×':'—'}</div><div class="metric-lbl">KGV Forward</div></div>
+      <div class="metric-card"><div class="metric-val">${selected.kgv_median_5j?selected.kgv_median_5j+'×':'—'}</div><div class="metric-lbl">KGV Median 5J</div></div>
+      <div class="metric-card"><div class="metric-val">${selected.dividende?selected.dividende+'%':'—'}</div><div class="metric-lbl">Dividende</div></div>
+    </div>
+    <div class="fields-card">
+      ${fieldVal('Thema','thema',selected.thema)}
+      ${fieldVal('Sektor','sektor',selected.sektor)}
+      ${fieldSel('Region','region',['Deutschland','Europa','USA','Japan','Taiwan','China','Norwegen','Dänemark'])}
+      ${fieldSel('Conviction','conviction',['hoch','moderat-bullish','neutral','leicht-bullish','neutral-spekulativ'])}
+      ${fieldSel('Status','status',['Bestand','Beobachten','Watchlist','Verkauft'])}
+      ${fieldVal('Bottleneck-Typ','bottleneck_typ',selected.bottleneck_typ)}
+      ${fieldVal('Bewertung','bewertung',selected.bewertung)}
+      ${fieldVal('Einstieg Ziel','einstieg_ziel',selected.einstieg_ziel)}
+      ${fieldVal('Kurs','kurs',selected.kurs)}
+      ${fieldVal('KGV Forward','kgv_forward',selected.kgv_forward)}
+      ${fieldVal('KGV Median 5J','kgv_median_5j',selected.kgv_median_5j)}
+      ${fieldVal('Dividende %','dividende',selected.dividende)}
+      ${editMode
+        ? `<div class="field-row"><span class="field-lbl">Earnings</span><input class="field-inp" type="date" data-key="nächstes_earnings" value="${h(editData.nächstes_earnings||'')}"></div>`
+        : `<div class="field-row"><span class="field-lbl">Earnings</span><span class="field-val">${h(selected.nächstes_earnings||'—')}</span></div>`}
+      ${fieldVal('Catalyst','catalyst',selected.catalyst)}
+    </div>
+    ${editMode ? `
+    <div class="card" style="margin-bottom:16px">
+      <span class="field-lbl" style="display:block;margin-bottom:8px">Bottleneck</span>
+      <button class="bn-toggle ${editData.bottleneck?'on':'off'}" id="bn-toggle-edit">${editData.bottleneck?'▲ Ja':'Nein'}</button>
+    </div>` : ''}
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Tags</div>
+      ${editMode
+        ? `<input class="field-inp" id="tags-inp" value="${h((editData.tags||[]).join(','))}" placeholder="tag1,tag2,tag3" style="width:100%">`
+        : `<div class="tags-wrap">${(selected.tags||[]).map(t=>`<span class="tag">${h(t)}</span>`).join('')}</div>`}
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Notizen & Thesis</div>
+      ${editMode
+        ? `<textarea class="notes-ta" id="notes-ta" rows="6">${h(editData.notizen||'')}</textarea>`
+        : `<div class="notes-text">${h(selected.notizen)||'<span style="color:#334155">Keine Notizen</span>'}</div>`}
+    </div>
+    <div class="update-lbl">Zuletzt aktualisiert: ${h(selected.letzte_aktualisierung||'—')}</div>
+    <button class="btn-delete" data-del="${h(selected.id)}">Position löschen</button>`;
+}
+
+function renderNew() {
+  const sel = (lbl,key,opts,def) => `
+    <div class="field-row">
+      <span class="field-lbl">${lbl}</span>
+      <select class="field-sel" id="new-${key}">
+        ${opts.map(o=>`<option ${o===def?'selected':''}>${h(o)}</option>`).join('')}
+      </select>
+    </div>`;
+  const inp = (lbl,key,type='text') => `
+    <div class="field-row">
+      <span class="field-lbl">${lbl}</span>
+      <input class="field-inp" id="new-${key}" type="${type}">
+    </div>`;
+  return `
+    <div class="new-header">
+      <button class="btn-back" id="btn-back">←</button>
+      <span class="new-title">Neue Position</span>
+      <button class="btn-save" id="btn-save-new">Speichern</button>
+    </div>
+    <div class="fields-card" style="margin-bottom:16px">
+      ${inp('Ticker *','ticker')}${inp('Name *','name')}${inp('Sektor','sektor')}${inp('Thema','thema')}
+      ${sel('Region','region',['Deutschland','Europa','USA','Japan','Taiwan','China','Norwegen','Dänemark'],'Deutschland')}
+      ${sel('Währung','währung',['EUR','USD','JPY','DKK','NOK','TWD','HKD'],'EUR')}
+      ${sel('Status','status',['Bestand','Beobachten','Watchlist'],'Beobachten')}
+      ${sel('Conviction','conviction',['hoch','moderat-bullish','neutral','leicht-bullish','neutral-spekulativ'],'moderat-bullish')}
+      ${inp('Bewertung','bewertung')}${inp('Einstieg Ziel','einstieg_ziel')}
+      ${inp('Kurs','kurs','number')}${inp('KGV Forward','kgv_forward','number')}
+      ${inp('KGV Median 5J','kgv_median_5j','number')}${inp('Dividende %','dividende','number')}
+      ${inp('Nächstes Earnings','nächstes_earnings','date')}${inp('Catalyst','catalyst')}
+      <div class="field-row"><span class="field-lbl">Tags</span><input class="field-inp" id="new-tags" placeholder="tag1,tag2"></div>
+      <div class="field-row"><span class="field-lbl">Bottleneck</span><button class="bn-toggle off" id="new-bn-toggle">Nein</button></div>
+      <div class="field-row"><span class="field-lbl">BN-Typ</span><input class="field-inp" id="new-bottleneck_typ"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Notizen & Thesis</div>
+      <textarea class="notes-ta" id="new-notizen" rows="5" placeholder="Investment-Thesis, Risiken, Beobachtungen…"></textarea>
+    </div>`;
+}
+
+function bindEvents() {
+  // Earnings / BN chips
+  document.querySelectorAll('.earnings-row[data-id], .bn-chip[data-id], .pos-card[data-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      const p = data.find(x => x.id === el.dataset.id);
+      if (p) { selected = p; editData = {...p}; editMode = false; currentView = 'detail'; render(); }
+    });
+  });
+
+  // Filter chips
+  document.querySelectorAll('[data-status]').forEach(el => {
+    el.addEventListener('click', () => { filterStatus = el.dataset.status; render(); });
+  });
+  const bnToggle = document.getElementById('bn-toggle');
+  if (bnToggle) bnToggle.addEventListener('click', () => { filterBN = filterBN==='ja'?'alle':'ja'; render(); });
+  const regSel = document.getElementById('region-sel');
+  if (regSel) regSel.addEventListener('change', () => { filterRegion = regSel.value; render(); });
+  const searchInp = document.getElementById('search-inp');
+  if (searchInp) { searchInp.addEventListener('input', () => { searchQ = searchInp.value; render(); }); searchInp.focus(); }
+
+  // Back button
+  const back = document.getElementById('btn-back');
+  if (back) back.addEventListener('click', () => { nav('list'); });
+
+  // Edit mode
+  const btnEdit = document.getElementById('btn-edit-mode');
+  if (btnEdit) btnEdit.addEventListener('click', () => { editMode = true; render(); });
+  const btnCancel = document.getElementById('btn-cancel-edit');
+  if (btnCancel) btnCancel.addEventListener('click', () => { editMode = false; render(); });
+
+  // Save edit
+  const btnSave = document.getElementById('btn-save-edit');
+  if (btnSave) btnSave.addEventListener('click', () => {
+    document.querySelectorAll('.field-inp[data-key], .field-sel[data-key]').forEach(el => {
+      const k = el.dataset.key;
+      const numKeys = ['kurs','kgv_forward','kgv_median_5j','dividende'];
+      editData[k] = numKeys.includes(k) ? (parseFloat(el.value)||null) : el.value;
+    });
+    const tagsInp = document.getElementById('tags-inp');
+    if (tagsInp) editData.tags = tagsInp.value.split(',').map(t=>t.trim()).filter(Boolean);
+    const notesTA = document.getElementById('notes-ta');
+    if (notesTA) editData.notizen = notesTA.value;
+    editData.letzte_aktualisierung = new Date().toISOString().slice(0,10);
+    data = data.map(p => p.id === editData.id ? editData : p);
+    selected = editData;
+    editMode = false;
+    save();
+    render();
+  });
+
+  // BN toggle in edit
+  const bnEdit = document.getElementById('bn-toggle-edit');
+  if (bnEdit) bnEdit.addEventListener('click', () => {
+    editData.bottleneck = !editData.bottleneck;
+    bnEdit.textContent = editData.bottleneck ? '▲ Ja' : 'Nein';
+    bnEdit.className = 'bn-toggle ' + (editData.bottleneck?'on':'off');
+  });
+
+  // Delete
+  document.querySelectorAll('[data-del]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (confirm('Position löschen?')) {
+        data = data.filter(p => p.id !== el.dataset.del);
+        save(); nav('list');
+      }
+    });
+  });
+
+  // New BN toggle
+  let newBN = false;
+  const newBNBtn = document.getElementById('new-bn-toggle');
+  if (newBNBtn) newBNBtn.addEventListener('click', () => {
+    newBN = !newBN;
+    newBNBtn.textContent = newBN ? '▲ Ja' : 'Nein';
+    newBNBtn.className = 'bn-toggle ' + (newBN?'on':'off');
+    newBNBtn._val = newBN;
+  });
+
+  // Save new
+  const btnSaveNew = document.getElementById('btn-save-new');
+  if (btnSaveNew) btnSaveNew.addEventListener('click', () => {
+    const g = id => (document.getElementById(id)||{}).value || '';
+    const bn = document.getElementById('new-bn-toggle');
+    const newPos = {
+      id: g('new-ticker') || Date.now().toString(),
+      ticker: g('new-ticker'), name: g('new-name'), sektor: g('new-sektor'), thema: g('new-thema'),
+      region: g('new-region'), währung: g('new-währung'), status: g('new-status'), conviction: g('new-conviction'),
+      bottleneck: bn ? bn._val||false : false,
+      bottleneck_typ: g('new-bottleneck_typ'), bewertung: g('new-bewertung'), einstieg_ziel: g('new-einstieg_ziel'),
+      kurs: parseFloat(g('new-kurs'))||null, kgv_forward: parseFloat(g('new-kgv_forward'))||null,
+      kgv_median_5j: parseFloat(g('new-kgv_median_5j'))||null, dividende: parseFloat(g('new-dividende'))||null,
+      nächstes_earnings: g('new-nächstes_earnings'), catalyst: g('new-catalyst'),
+      tags: g('new-tags').split(',').map(t=>t.trim()).filter(Boolean),
+      notizen: g('new-notizen'), letzte_aktualisierung: new Date().toISOString().slice(0,10)
+    };
+    data.push(newPos); save(); nav('list');
+  });
+}
+
+load();
+</script>
+</body>
+</html>
