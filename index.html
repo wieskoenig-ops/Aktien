@@ -101,6 +101,16 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .btn-delete { width: 100%; background: none; border: 1px solid #1f1315; color: #7f1d1d; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 8px; }
 .update-lbl { font-size: 11px; color: var(--text5); text-align: center; margin-bottom: 8px; }
 .perf-pos { color: var(--green); }
+.pos-notes-preview { font-size: 12px; color: var(--text4); margin-top: 6px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pos-notes-empty { font-size: 12px; color: var(--text5); margin-top: 6px; font-style: italic; }
+.notes-editor { width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--text); padding: 14px; border-radius: 10px; font-size: 15px; outline: none; resize: none; font-family: inherit; line-height: 1.7; min-height: 120px; }
+.notes-rendered { font-size: 15px; color: var(--text2); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.notes-rendered a { color: var(--blue); text-decoration: none; }
+.notes-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+.notes-card-title { font-size: 11px; color: var(--text4); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.btn-edit-notes { background: var(--bg3); border: 1px solid var(--border); color: var(--text3); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.btn-save-notes { background: var(--blue-btn); border: none; color: #fff; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.details-toggle { background: none; border: 1px solid var(--border); color: var(--text4); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; text-align: left; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
 .perf-neg { color: var(--red); }
 .scalable-bucket { font-size: 10px; color: var(--blue); background: #1e3a5f; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
 </style>
@@ -221,6 +231,12 @@ const INITIAL = [
   {id:"LIN_DB",ticker:"LIN",name:"Linde plc (Deutsche Bank)",sektor:"Industriegase / Chemie",thema:"Halbleiter-Spezialgas / Wasserstoff",region:"USA",währung:"EUR",status:"Bestand",conviction:"hoch",bottleneck:true,bottleneck_typ:"Oligopol Industriegase (mit Air Liquide / Air Products)",stück:40,positionswert:17792,einstiegskurs:189.57,perf_pct:135.25,perf_eur:10229,kgv_forward:28,kgv_median_5j:28,dividende:1.40,bewertung:"fair",nächstes_earnings:"",catalyst:"Halbleiter-Capex-Zyklus",einstieg_ziel:"",scalable_thema:"Deutsche Bank",tags:["bottleneck","industriegase","halbleiter","usa"],notizen:"Deutsche Bank Depot. 40 Stk × €444,80. Ursprüngliche Wasserstoff-Thesis nicht eingetroffen, Position dennoch stark performt.",letzte_aktualisierung:"2026-06-17"},
   {id:"PFE_DB",ticker:"PFE",name:"Pfizer Inc. (Deutsche Bank)",sektor:"Pharma",thema:"Pharma Dividende / Post-COVID",region:"USA",währung:"EUR",status:"Bestand",conviction:"neutral",bottleneck:false,bottleneck_typ:"",stück:100,positionswert:2248,einstiegskurs:26.31,perf_pct:-14.43,perf_eur:-379,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"Pipeline Recovery / Dividende",einstieg_ziel:"",scalable_thema:"Deutsche Bank",tags:["pharma","usa","dividende"],notizen:"Deutsche Bank Depot. 100 Stk × €22,475. Thesis?",letzte_aktualisierung:"2026-06-17"},
 
+
+  // NEUE POSITIONEN 17. JUNI 2026
+  {id:"RWE",ticker:"RWE.DE",name:"RWE AG",sektor:"Energie / Renewables",thema:"Offshore Wind / Coal Exit 2030 / Grid",region:"Deutschland",währung:"EUR",status:"Bestand",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",stück:5,positionswert:270,einstiegskurs:54.0,perf_pct:0,perf_eur:0,kgv_forward:null,kgv_median_5j:null,dividende:3.5,bewertung:"fair",nächstes_earnings:"",catalyst:"Coal Exit 2030 / Offshore Wind Expansion / Morgan Stanley Top Pick",einstieg_ziel:"",scalable_thema:"Europa Infrastruktur",tags:["erneuerbar","deutschland","grid","offshore-wind"],notizen:"Einstieg 17.06.2026 unter €54 — technisch abgesichert. Morgan Stanley + UBS Top Pick europäische Versorger 2026. Coal Exit 2030 vertraglich mit Bundesregierung fixiert. Merck-Position bisher, Aufstockung geplant. Bis 2030 noch Braunkohle — dann vollständig Renewables.",letzte_aktualisierung:"2026-06-17"},
+  {id:"ENGIE",ticker:"ENGI.PA",name:"ENGIE SA",sektor:"Energie / Infrastruktur / Renewables",thema:"Regulierte Netze / Renewables / LNG",region:"Frankreich",währung:"EUR",status:"Beobachten",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",stück:null,positionswert:null,einstiegskurs:null,perf_pct:null,perf_eur:null,kgv_forward:14.8,kgv_median_5j:null,dividende:5.5,bewertung:"fair",nächstes_earnings:"",catalyst:"UK Power Networks Integration / 6,6 GW Renewables im Bau / Belgien Nuclear Exit",einstieg_ziel:"25.00",scalable_thema:"Europa Infrastruktur",tags:["beobachten","erneuerbar","frankreich","netz","lng","dividende"],notizen:"Einer der größten Energiekonzerne Europas — in Deutschland kaum bekannt. Drei Segmente: Renewables, Networks (reguliert, inflationsindexiert), Client Solutions. UK Power Networks Akquisition 2026 abgeschlossen — Großbritanniens größter Stromverteiler. Belgien kauft Nuclear Assets — Haftungsrisiko reduziert. Dividenden-Floor €1,10 garantiert. Payout Ratio hoch (89%) — kritisch beobachten. Quartalsweise Zahlung wäre ideal für Ruhestand aber ENGIE zahlt jährlich. Entry bei €25 oder darunter.",letzte_aktualisierung:"2026-06-17"},
+  {id:"ENI",ticker:"ENI.MI",name:"ENI S.p.A.",sektor:"Energie / Öl & Gas / LNG",thema:"Integrierter Energiekonzern / Upstream / LNG",region:"Europa",währung:"EUR",status:"Beobachten",conviction:"moderat-bullish",bottleneck:false,bottleneck_typ:"",stück:1,positionswert:null,einstiegskurs:21.82,perf_pct:0,perf_eur:0,kgv_forward:null,kgv_median_5j:null,dividende:5.5,bewertung:"fair",nächstes_earnings:"",catalyst:"2026 Dividende €1,10 (+5%) bestätigt / Buyback auf €2,8 Mrd. erhöht / Upstream Afrika",einstieg_ziel:"",scalable_thema:"Europa Infrastruktur",tags:["beobachten","öl-gas","italien","dividende","lng","upstream"],notizen:"Bisher 1 Stück im DB-Depot. Stärkste Dividendensicherheit im Vergleich: Payout Ratio nur 29% — sehr konservativ. Quartalsweise Dividendenzahlung — ideal für Ruhestandseinkommen. 2026 Dividende +5% trotz gesunkenem Brent bestätigt. Buyback fast verdoppelt auf €2,8 Mrd. Ölpreis-Abhängigkeit ist das Hauptrisiko. Aufstocken als Dividenden-Anker für Ruhestand prüfen.",letzte_aktualisierung:"2026-06-17"},
+
   // WATCHLIST / BEOBACHTEN
   {id:"CDNS",ticker:"CDNS",name:"Cadence Design Systems",sektor:"Halbleiter / EDA-Software",thema:"EDA-Duopol / AI-Chip-Design",region:"USA",währung:"USD",status:"Beobachten",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"Oligopol / de-facto-Duopol (mit Synopsys)",stück:1,positionswert:null,einstiegskurs:336.15,perf_pct:0,perf_eur:0,kgv_forward:46,kgv_median_5j:74,dividende:null,bewertung:"fair",nächstes_earnings:"2026-07-21",catalyst:"Q2 2026 Earnings",einstieg_ziel:"<330",scalable_thema:"Bottleneck Watchlist",tags:["beobachten","bottleneck","halbleiter","eda","usa"],notizen:"Einstieg unter $330.",letzte_aktualisierung:"2026-06-17"},
   {id:"MSCI",ticker:"MSCI",name:"MSCI Inc.",sektor:"Finanzinfrastruktur / Indizes",thema:"Index-Monopol / SpaceX-Anthropic IPO",region:"USA",währung:"USD",status:"Beobachten",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"Index-Monopol (MSCI-Indizes globaler Standard)",stück:1,positionswert:null,einstiegskurs:523.60,perf_pct:0,perf_eur:0,kgv_forward:null,kgv_median_5j:null,dividende:null,bewertung:"fair",nächstes_earnings:"",catalyst:"SpaceX/Anthropic IPO Aufnahme in Indizes",einstieg_ziel:"",scalable_thema:"Bottleneck Watchlist",tags:["beobachten","bottleneck","finanzinfrastruktur","usa"],notizen:"SpaceX/Anthropic IPO Benefiziar via Indexaufnahme.",letzte_aktualisierung:"2026-06-17"},
@@ -314,24 +330,37 @@ function renderList(items,watchOnly=false){
     </div>
     <div class="filter-count">${items.length} Positionen</div>`:`<div class="filter-count" style="margin-bottom:12px">${items.length} Positionen</div>`}
     ${items.map(p=>`
-      <div class="pos-card" data-id="${h(p.id)}">
-        <div class="pos-left">
-          <div class="pos-top">
-            <span class="pos-ticker" style="color:${SC[p.status]||'#94a3b8'}">${h(p.ticker)}</span>
-            ${p.bottleneck?`<span class="bn-badge">▲ BN</span>`:''}
-            <span class="status-badge" style="background:${(SC[p.status]||'#64748b')}18;color:${SC[p.status]||'#64748b'}">${h(p.status)}</span>
-            ${p.scalable_thema?`<span class="scalable-bucket">${h(p.scalable_thema)}</span>`:''}
+      <div class="pos-card" data-id="${h(p.id)}" style="flex-direction:column;align-items:stretch;gap:0">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="pos-left">
+            <div class="pos-top">
+              <span class="pos-ticker" style="color:${SC[p.status]||'#94a3b8'}">${h(p.ticker)}</span>
+              ${p.bottleneck?`<span class="bn-badge">▲ BN</span>`:''}
+              <span class="status-badge" style="background:${(SC[p.status]||'#64748b')}18;color:${SC[p.status]||'#64748b'}">${h(p.status)}</span>
+              ${p.scalable_thema?`<span class="scalable-bucket">${h(p.scalable_thema)}</span>`:''}
+            </div>
+            <div class="pos-name">${h(p.name)}</div>
+            <div class="pos-meta">${RF[p.region]||''} ${h(p.region)} · ${h(p.thema)}</div>
+            ${p.nächstes_earnings?`<div class="pos-date">📅 ${h(p.nächstes_earnings)}</div>`:''}
           </div>
-          <div class="pos-name">${h(p.name)}</div>
-          <div class="pos-meta">${RF[p.region]||''} ${h(p.region)} · ${h(p.thema)}</div>
-          ${p.nächstes_earnings?`<div class="pos-date">📅 ${h(p.nächstes_earnings)}</div>`:''}
+          <div class="pos-right">
+            ${p.positionswert?`<div class="pos-val">${p.positionswert.toLocaleString('de')}€</div>`:''}
+            ${p.stück?`<div style="font-size:11px;color:var(--text4)">${p.stück} Stk</div>`:''}
+            ${p.perf_pct!==null&&p.perf_pct!==undefined?`<div class="pos-perf ${p.perf_pct>=0?'perf-pos':'perf-neg'}">${p.perf_pct>=0?'+':''}${p.perf_pct.toFixed(1)}%</div>`:'<div class="pos-arr" style="font-size:16px;color:var(--text5)">›</div>'}
+          </div>
         </div>
-        <div class="pos-right">
-          ${p.positionswert?`<div class="pos-val">${p.positionswert.toLocaleString('de')}€</div>`:''}
-          ${p.stück?`<div style="font-size:11px;color:var(--text4)">${p.stück} Stk</div>`:''}
-          ${p.perf_pct!==null&&p.perf_pct!==undefined?`<div class="pos-perf ${p.perf_pct>=0?'perf-pos':'perf-neg'}">${p.perf_pct>=0?'+':''}${p.perf_pct.toFixed(1)}%</div>`:'<div class="pos-arr">›</div>'}
-        </div>
+        ${p.notizen
+          ? `<div class="pos-notes-preview">${h(p.notizen)}</div>`
+          : `<div class="pos-notes-empty">Keine Notizen — tippen zum Hinzufügen</div>`}
       </div>`).join('')}`;
+}
+
+function renderMarkdown(text) {
+  if (!text) return '';
+  return h(text)
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
 
 function renderDetail(){
@@ -342,7 +371,6 @@ function renderDetail(){
   const fs=(lbl,key,opts)=>`<div class="field-row"><span class="field-lbl">${lbl}</span>${editMode?
     `<select class="field-sel" data-key="${key}">${opts.map(o=>`<option ${editData[key]===o?'selected':''}>${h(o)}</option>`).join('')}</select>`:
     `<span class="field-val">${h(selected[key]??'—')}</span>`}</div>`;
-  const perfColor=selected.perf_pct>=0?'#22c55e':'#ef4444';
   return `
     <div class="detail-header">
       <button class="btn-back" id="btn-back">←</button>
@@ -357,6 +385,25 @@ function renderDetail(){
       ${!editMode?`<button class="btn-edit" id="btn-edit-mode">Bearbeiten</button>`:
         `<div style="display:flex;gap:8px"><button class="btn-save" id="btn-save-edit">Speichern</button><button class="btn-cancel" id="btn-cancel-edit">✕</button></div>`}
     </div>
+    <div class="notes-card">
+      <div class="notes-card-title">
+        <span>Notizen & Thesis</span>
+        ${!editMode
+          ? `<button class="btn-edit-notes" id="btn-notes-edit">Bearbeiten</button>`
+          : `<button class="btn-save-notes" id="btn-notes-save">Speichern</button>`}
+      </div>
+      ${editMode
+        ? `<textarea class="notes-editor" id="notes-ta">${h(editData.notizen||'')}</textarea>
+           <div style="font-size:11px;color:var(--text5);margin-top:6px">Links: [Text](URL) · Fett: **Text**</div>`
+        : selected.notizen
+          ? `<div class="notes-rendered">${renderMarkdown(selected.notizen)}</div>`
+          : `<div style="color:var(--text5);font-size:14px;font-style:italic">Noch keine Notizen. Tippe auf Bearbeiten.</div>`}
+    </div>
+    <button class="details-toggle" id="details-toggle">
+      <span>Kennzahlen & Details</span>
+      <span id="details-arrow">▼</span>
+    </button>
+    <div id="details-section">
     <div class="metrics-row">
       <div class="metric-card"><div class="metric-val">${selected.positionswert?selected.positionswert.toLocaleString('de')+'€':'—'}</div><div class="metric-lbl">Positionswert</div></div>
       <div class="metric-card"><div class="metric-val">${selected.stück??'—'}</div><div class="metric-lbl">Stückzahl</div></div>
@@ -399,6 +446,7 @@ function renderDetail(){
       <div class="card-title">Notizen & Thesis</div>
       ${editMode?`<textarea class="notes-ta" id="notes-ta" rows="6">${h(editData.notizen||'')}</textarea>`:
         `<div class="notes-text">${selected.notizen||'<span style="color:#334155">Keine Notizen</span>'}</div>`}
+    </div>
     </div>
     <div class="update-lbl">Zuletzt aktualisiert: ${h(selected.letzte_aktualisierung||'—')}</div>
     <button class="btn-delete" data-del="${h(selected.id)}">Position löschen</button>`;
@@ -444,6 +492,33 @@ function bindEvents(){
   const rS=document.getElementById('region-sel'); if(rS) rS.addEventListener('change',()=>{filterRegion=rS.value;render();});
   const sI=document.getElementById('search-inp'); if(sI){sI.addEventListener('input',()=>{searchQ=sI.value;render();});sI.focus();}
   const back=document.getElementById('btn-back'); if(back) back.addEventListener('click',()=>nav('list'));
+  
+  // Notes inline edit
+  const btnNotesEdit=document.getElementById('btn-notes-edit');
+  if(btnNotesEdit) btnNotesEdit.addEventListener('click',()=>{editMode=true;render();setTimeout(()=>{const ta=document.getElementById('notes-ta');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}},50);});
+  
+  const btnNotesSave=document.getElementById('btn-notes-save');
+  if(btnNotesSave) btnNotesSave.addEventListener('click',()=>{
+    const ta=document.getElementById('notes-ta');
+    if(ta) editData.notizen=ta.value;
+    editData.letzte_aktualisierung=new Date().toISOString().slice(0,10);
+    data=data.map(p=>p.id===editData.id?editData:p);
+    selected=editData; editMode=false; save(); render();
+  });
+
+  // Details toggle
+  let detailsOpen=false;
+  const detToggle=document.getElementById('details-toggle');
+  const detSection=document.getElementById('details-section');
+  const detArrow=document.getElementById('details-arrow');
+  if(detToggle&&detSection){
+    detSection.style.display='none';
+    detToggle.addEventListener('click',()=>{
+      detailsOpen=!detailsOpen;
+      detSection.style.display=detailsOpen?'block':'none';
+      if(detArrow) detArrow.textContent=detailsOpen?'▲':'▼';
+    });
+  }
   const bE=document.getElementById('btn-edit-mode'); if(bE) bE.addEventListener('click',()=>{editMode=true;render();});
   const bC=document.getElementById('btn-cancel-edit'); if(bC) bC.addEventListener('click',()=>{editMode=false;render();});
   const bS=document.getElementById('btn-save-edit');
@@ -462,6 +537,33 @@ function bindEvents(){
   const bnE=document.getElementById('bn-toggle-edit');
   if(bnE) bnE.addEventListener('click',()=>{editData.bottleneck=!editData.bottleneck;bnE.textContent=editData.bottleneck?'▲ Ja':'Nein';bnE.className='bn-toggle '+(editData.bottleneck?'on':'off');});
   document.querySelectorAll('[data-del]').forEach(el=>el.addEventListener('click',()=>{if(confirm('Position löschen?')){data=data.filter(p=>p.id!==el.dataset.del);save();nav('list');}}));
+  // New form: details toggle
+  const newDetToggle=document.getElementById('new-details-toggle');
+  const newDetSection=document.getElementById('new-details-section');
+  const newDetArrow=document.getElementById('new-details-arrow');
+  if(newDetToggle&&newDetSection){
+    newDetToggle.addEventListener('click',()=>{
+      const open=newDetSection.style.display!=='none';
+      newDetSection.style.display=open?'none':'block';
+      if(newDetArrow) newDetArrow.textContent=open?'▼':'▲';
+    });
+  }
+
+  // New form: status chips
+  let newStatus='Beobachten';
+  document.querySelectorAll('[data-new-status]').forEach(el=>{
+    if(el.dataset.newStatus===newStatus) el.classList.add('active-status');
+    el.addEventListener('click',()=>{
+      newStatus=el.dataset.newStatus;
+      document.querySelectorAll('[data-new-status]').forEach(e=>e.classList.remove('active-status'));
+      el.classList.add('active-status');
+    });
+  });
+
+  // Auto-focus notizen on new form
+  const newNotizen=document.getElementById('new-notizen');
+  // Don't auto-focus - ticker first
+
   let newBN=false;
   const nBN=document.getElementById('new-bn-toggle');
   if(nBN) nBN.addEventListener('click',()=>{newBN=!newBN;nBN.textContent=newBN?'▲ Ja':'Nein';nBN.className='bn-toggle '+(newBN?'on':'off');nBN._val=newBN;});
