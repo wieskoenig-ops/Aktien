@@ -454,32 +454,53 @@ function renderDetail(){
 
 function renderNew(){
   const sel=(lbl,key,opts,def)=>`<div class="field-row"><span class="field-lbl">${lbl}</span><select class="field-sel" id="new-${key}">${opts.map(o=>`<option ${o===def?'selected':''}>${h(o)}</option>`).join('')}</select></div>`;
-  const inp=(lbl,key,type='text')=>`<div class="field-row"><span class="field-lbl">${lbl}</span><input class="field-inp" id="new-${key}" type="${type}"></div>`;
+  const inp=(lbl,key,type='text',ph='')=>`<div class="field-row"><span class="field-lbl">${lbl}</span><input class="field-inp" id="new-${key}" type="${type}" placeholder="${ph}"></div>`;
   return `
-    <div class="new-header">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
       <button class="btn-back" id="btn-back">←</button>
-      <span style="font-size:18px;font-weight:800;flex:1">Neue Position</span>
+      <span style="font-size:18px;font-weight:800;flex:1;color:var(--text)">Neue Position</span>
       <button class="btn-save" id="btn-save-new">Speichern</button>
     </div>
-    <div class="fields-card" style="margin-bottom:16px">
-      ${inp('Ticker *','ticker')}${inp('Name *','name')}${inp('Sektor','sektor')}${inp('Thema','thema')}
-      ${sel('Region','region',['Deutschland','Europa','Frankreich','USA','Japan','Taiwan','China','Norwegen','Dänemark','UK','Kanada','International'],'Deutschland')}
-      ${sel('Währung','währung',['EUR','USD','JPY','DKK','NOK','TWD','HKD','GBP','KRW'],'EUR')}
-      ${sel('Status','status',['Bestand','Beobachten','Watchlist'],'Beobachten')}
-      ${sel('Conviction','conviction',['hoch','moderat-bullish','neutral','leicht-bullish','neutral-spekulativ'],'moderat-bullish')}
-      ${sel('Bucket','scalable_thema',['Kern','Robotik','Deutschland','Tech International','Gesundheit','Rohstoffe','China','Europa Infrastruktur','Bottleneck Watchlist'],'Kern')}
-      ${inp('Stückzahl','stück','number')}${inp('Positionswert €','positionswert','number')}
-      ${inp('Ø Einstiegskurs','einstiegskurs','number')}${inp('Bewertung','bewertung')}
-      ${inp('Entry Ziel','einstieg_ziel')}${inp('KGV Forward','kgv_forward','number')}
-      ${inp('Dividende %','dividende','number')}${inp('Nächstes Earnings','nächstes_earnings','date')}
-      ${inp('Catalyst','catalyst')}
-      <div class="field-row"><span class="field-lbl">Tags</span><input class="field-inp" id="new-tags" placeholder="tag1,tag2"></div>
-      <div class="field-row"><span class="field-lbl">Bottleneck</span><button class="bn-toggle off" id="new-bn-toggle">Nein</button></div>
-      <div class="field-row"><span class="field-lbl">BN-Typ</span><input class="field-inp" id="new-bottleneck_typ"></div>
+
+    <div class="notes-card" style="margin-bottom:14px">
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <input class="field-inp" id="new-ticker" placeholder="Ticker *" style="font-size:16px;font-weight:700;width:120px;flex-shrink:0">
+        <input class="field-inp" id="new-name" placeholder="Name *" style="font-size:15px;flex:1">
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="chip active-status" data-new-status="Beobachten">Beobachten</button>
+        <button class="chip" data-new-status="Bestand">Bestand</button>
+        <button class="chip" data-new-status="Watchlist">Watchlist</button>
+      </div>
+      <textarea class="notes-editor" id="new-notizen" placeholder="Notizen, Thesis, Idee…&#10;Links: [Linktext](https://url.com)" style="min-height:160px"></textarea>
+      <div style="font-size:11px;color:var(--text5);margin-top:6px">Links: [Text](URL) · Fett: **Text**</div>
     </div>
-    <div class="card">
-      <div class="card-title">Notizen & Thesis</div>
-      <textarea class="notes-ta" id="new-notizen" rows="5" placeholder="Investment-Thesis, Risiken, Beobachtungen…"></textarea>
+
+    <button class="details-toggle" id="new-details-toggle">
+      <span>Weitere Details (optional)</span>
+      <span id="new-details-arrow">▼</span>
+    </button>
+    <div id="new-details-section" style="display:none">
+      <div class="fields-card" style="margin-bottom:14px;margin-top:10px">
+        ${inp('Thema','thema')}
+        ${inp('Sektor','sektor')}
+        ${sel('Region','region',['Deutschland','Europa','Frankreich','USA','Japan','Taiwan','China','Norwegen','Dänemark','UK','Kanada','International'],'Deutschland')}
+        ${sel('Währung','währung',['EUR','USD','JPY','DKK','NOK','TWD','HKD','GBP','KRW'],'EUR')}
+        ${sel('Conviction','conviction',['hoch','moderat-bullish','neutral','leicht-bullish','neutral-spekulativ'],'moderat-bullish')}
+        ${sel('Bucket','scalable_thema',['Kern','Robotik','Deutschland','Tech International','Gesundheit','Rohstoffe','China','Europa Infrastruktur','Bottleneck Watchlist','Deutsche Bank'],'Kern')}
+        ${inp('Stückzahl','stück','number')}
+        ${inp('Positionswert €','positionswert','number')}
+        ${inp('Ø Einstiegskurs','einstiegskurs','number')}
+        ${inp('Bewertung','bewertung')}
+        ${inp('Entry Ziel','einstieg_ziel')}
+        ${inp('KGV Forward','kgv_forward','number')}
+        ${inp('Dividende %','dividende','number')}
+        ${inp('Nächstes Earnings','nächstes_earnings','date')}
+        ${inp('Catalyst','catalyst')}
+        <div class="field-row"><span class="field-lbl">Tags</span><input class="field-inp" id="new-tags" placeholder="tag1,tag2"></div>
+        <div class="field-row"><span class="field-lbl">Bottleneck</span><button class="bn-toggle off" id="new-bn-toggle">Nein</button></div>
+        <div class="field-row"><span class="field-lbl">BN-Typ</span><input class="field-inp" id="new-bottleneck_typ"></div>
+      </div>
     </div>`;
 }
 
@@ -490,13 +511,14 @@ function bindEvents(){
   document.querySelectorAll('[data-status]').forEach(el=>el.addEventListener('click',()=>{filterStatus=el.dataset.status;render();}));
   const bnT=document.getElementById('bn-toggle'); if(bnT) bnT.addEventListener('click',()=>{filterBN=filterBN==='ja'?'alle':'ja';render();});
   const rS=document.getElementById('region-sel'); if(rS) rS.addEventListener('change',()=>{filterRegion=rS.value;render();});
-  const sI=document.getElementById('search-inp'); if(sI){sI.addEventListener('input',()=>{searchQ=sI.value;render();});sI.focus();}
+  const sI=document.getElementById('search-inp'); if(sI){sI.addEventListener('input',()=>{searchQ=sI.value;render();});}
+
+  // Back button
   const back=document.getElementById('btn-back'); if(back) back.addEventListener('click',()=>nav('list'));
-  
+
   // Notes inline edit
   const btnNotesEdit=document.getElementById('btn-notes-edit');
   if(btnNotesEdit) btnNotesEdit.addEventListener('click',()=>{editMode=true;render();setTimeout(()=>{const ta=document.getElementById('notes-ta');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}},50);});
-  
   const btnNotesSave=document.getElementById('btn-notes-save');
   if(btnNotesSave) btnNotesSave.addEventListener('click',()=>{
     const ta=document.getElementById('notes-ta');
@@ -506,19 +528,7 @@ function bindEvents(){
     selected=editData; editMode=false; save(); render();
   });
 
-  // Details toggle
-  let detailsOpen=false;
-  const detToggle=document.getElementById('details-toggle');
-  const detSection=document.getElementById('details-section');
-  const detArrow=document.getElementById('details-arrow');
-  if(detToggle&&detSection){
-    detSection.style.display='none';
-    detToggle.addEventListener('click',()=>{
-      detailsOpen=!detailsOpen;
-      detSection.style.display=detailsOpen?'block':'none';
-      if(detArrow) detArrow.textContent=detailsOpen?'▲':'▼';
-    });
-  }
+  // Full edit mode
   const bE=document.getElementById('btn-edit-mode'); if(bE) bE.addEventListener('click',()=>{editMode=true;render();});
   const bC=document.getElementById('btn-cancel-edit'); if(bC) bC.addEventListener('click',()=>{editMode=false;render();});
   const bS=document.getElementById('btn-save-edit');
@@ -534,9 +544,27 @@ function bindEvents(){
     data=data.map(p=>p.id===editData.id?editData:p);
     selected=editData; editMode=false; save(); render();
   });
+
+  // BN toggle in edit
   const bnE=document.getElementById('bn-toggle-edit');
   if(bnE) bnE.addEventListener('click',()=>{editData.bottleneck=!editData.bottleneck;bnE.textContent=editData.bottleneck?'▲ Ja':'Nein';bnE.className='bn-toggle '+(editData.bottleneck?'on':'off');});
+
+  // Details toggle in detail view
+  const detToggle=document.getElementById('details-toggle');
+  const detSection=document.getElementById('details-section');
+  const detArrow=document.getElementById('details-arrow');
+  if(detToggle&&detSection){
+    detSection.style.display='none';
+    detToggle.addEventListener('click',()=>{
+      const open=detSection.style.display!=='none';
+      detSection.style.display=open?'none':'block';
+      if(detArrow) detArrow.textContent=open?'▼':'▲';
+    });
+  }
+
+  // Delete
   document.querySelectorAll('[data-del]').forEach(el=>el.addEventListener('click',()=>{if(confirm('Position löschen?')){data=data.filter(p=>p.id!==el.dataset.del);save();nav('list');}}));
+
   // New form: details toggle
   const newDetToggle=document.getElementById('new-details-toggle');
   const newDetSection=document.getElementById('new-details-section');
@@ -549,10 +577,9 @@ function bindEvents(){
     });
   }
 
-  // New form: status chips
+  // New form: status chip selection
   let newStatus='Beobachten';
   document.querySelectorAll('[data-new-status]').forEach(el=>{
-    if(el.dataset.newStatus===newStatus) el.classList.add('active-status');
     el.addEventListener('click',()=>{
       newStatus=el.dataset.newStatus;
       document.querySelectorAll('[data-new-status]').forEach(e=>e.classList.remove('active-status'));
@@ -560,32 +587,41 @@ function bindEvents(){
     });
   });
 
-  // Auto-focus notizen on new form
-  const newNotizen=document.getElementById('new-notizen');
-  // Don't auto-focus - ticker first
-
+  // New form: BN toggle
   let newBN=false;
   const nBN=document.getElementById('new-bn-toggle');
   if(nBN) nBN.addEventListener('click',()=>{newBN=!newBN;nBN.textContent=newBN?'▲ Ja':'Nein';nBN.className='bn-toggle '+(newBN?'on':'off');nBN._val=newBN;});
+
+  // Auto-focus ticker on new form
+  const newTicker=document.getElementById('new-ticker');
+  if(newTicker) setTimeout(()=>newTicker.focus(),50);
+
+  // Save new position
   const bSN=document.getElementById('btn-save-new');
   if(bSN) bSN.addEventListener('click',()=>{
     const g=id=>(document.getElementById(id)||{}).value||'';
     const bn=document.getElementById('new-bn-toggle');
     const np={
-      id:g('new-ticker')||Date.now().toString(),ticker:g('new-ticker'),name:g('new-name'),sektor:g('new-sektor'),thema:g('new-thema'),
-      region:g('new-region'),währung:g('new-währung'),status:g('new-status'),conviction:g('new-conviction'),
-      scalable_thema:g('new-scalable_thema'),bottleneck:bn?bn._val||false:false,bottleneck_typ:g('new-bottleneck_typ'),
+      id:g('new-ticker')||Date.now().toString(),
+      ticker:g('new-ticker'),name:g('new-name'),sektor:g('new-sektor'),thema:g('new-thema'),
+      region:g('new-region')||'Deutschland',währung:g('new-währung')||'EUR',
+      status:newStatus||'Beobachten',conviction:g('new-conviction')||'moderat-bullish',
+      scalable_thema:g('new-scalable_thema')||'',
+      bottleneck:bn?bn._val||false:false,bottleneck_typ:g('new-bottleneck_typ'),
       bewertung:g('new-bewertung'),einstieg_ziel:g('new-einstieg_ziel'),
       stück:parseFloat(g('new-stück'))||null,positionswert:parseFloat(g('new-positionswert'))||null,
       einstiegskurs:parseFloat(g('new-einstiegskurs'))||null,perf_pct:null,perf_eur:null,
       kgv_forward:parseFloat(g('new-kgv_forward'))||null,dividende:parseFloat(g('new-dividende'))||null,
       nächstes_earnings:g('new-nächstes_earnings'),catalyst:g('new-catalyst'),
-      tags:g('new-tags').split(',').map(t=>t.trim()).filter(Boolean),notizen:g('new-notizen'),
+      tags:g('new-tags').split(',').map(t=>t.trim()).filter(Boolean),
+      notizen:g('new-notizen'),
       letzte_aktualisierung:new Date().toISOString().slice(0,10)
     };
+    if(!np.ticker){alert('Ticker ist Pflichtfeld');return;}
     data.push(np);save();nav('list');
   });
 }
+
 load();
 </script>
 </body>
