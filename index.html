@@ -112,6 +112,12 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .btn-save-notes { background: var(--blue-btn); border: none; color: #fff; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
 .details-toggle { background: none; border: 1px solid var(--border); color: var(--text4); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; text-align: left; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
 .perf-neg { color: var(--red); }
+.btn-backup { background: none; border: 1px solid var(--border); color: var(--text3); padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.backup-text { font-size: 14px; color: var(--text3); line-height: 1.6; margin-bottom: 14px; }
+.backup-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.backup-btns button { flex: 1; min-width: 150px; padding: 14px 16px; font-size: 15px; }
+.backup-ta { width: 100%; background: var(--bg); border: 1px solid var(--border2); color: var(--text); padding: 12px; border-radius: 10px; font-size: 13px; outline: none; resize: vertical; font-family: ui-monospace, Menlo, monospace; min-height: 140px; margin: 12px 0; }
+.backup-msg { font-size: 13px; margin-top: 10px; min-height: 18px; }
 .scalable-bucket { font-size: 10px; color: var(--blue); background: #1e3a5f; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
 </style>
 </head>
@@ -121,6 +127,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     <span class="logo" onclick="nav('dash')">▲ VAULT</span>
     <span class="spacer"></span>
     <span class="toast" id="toast"></span>
+    <button class="btn-backup" onclick="nav('backup')">⇅ Backup</button>
     <button class="btn-new" onclick="nav('new')">+ Neu</button>
   </div>
   <div id="main"></div>
@@ -283,6 +290,7 @@ function render(){
   else if(currentView==='watch') main.innerHTML=renderList(data.filter(p=>p.status!=='Bestand'),true);
   else if(currentView==='detail') main.innerHTML=renderDetail();
   else if(currentView==='new') main.innerHTML=renderNew();
+  else if(currentView==='backup') main.innerHTML=renderBackup();
   bindEvents();
 }
 
@@ -504,6 +512,81 @@ function renderNew(){
     </div>`;
 }
 
+function renderBackup(){
+  const n=data.length, nb=data.filter(p=>p.status==='Bestand').length;
+  return `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <button class="btn-back" id="btn-back">←</button>
+      <span style="font-size:18px;font-weight:800;flex:1;color:var(--text)">Backup</span>
+    </div>
+    <div class="card">
+      <div class="card-title">Export</div>
+      <div class="backup-text">Sichert alle ${n} Positionen (davon ${nb} im Bestand) inklusive Notizen als JSON-Datei. Regelmäßig exportieren, denn gelöschter Browser-Speicher löscht auch alle Daten.</div>
+      <div class="backup-btns">
+        <button class="btn-save" id="btn-export-file">Als Datei sichern</button>
+        <button class="btn-edit" id="btn-export-copy">In Zwischenablage</button>
+      </div>
+      <div class="backup-msg" id="export-msg"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Import (Wiederherstellen)</div>
+      <div class="backup-text">Ersetzt <b>alle</b> aktuellen Daten durch das Backup. Datei wählen oder JSON unten einfügen.</div>
+      <div class="backup-btns">
+        <button class="btn-edit" id="btn-import-file">Datei wählen</button>
+      </div>
+      <input type="file" id="import-file" accept=".json,application/json,text/plain" style="display:none">
+      <textarea class="backup-ta" id="import-ta" placeholder="JSON hier einfügen …"></textarea>
+      <div class="backup-btns">
+        <button class="btn-save" id="btn-import-text">Eingefügtes JSON importieren</button>
+      </div>
+      <div class="backup-msg" id="import-msg"></div>
+    </div>`;
+}
+function backupJSON(){
+  return JSON.stringify({app:'bottleneck-vault',version:1,exportiert:new Date().toISOString(),anzahl:data.length,positionen:data},null,2);
+}
+function backupMsg(id,txt,ok){ const el=document.getElementById(id); if(el){el.textContent=txt;el.style.color=ok?'var(--green)':'var(--red)';} }
+async function exportFile(){
+  const name='bottleneck-vault-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  const json=backupJSON();
+  try{
+    const file=new File([json],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:name});
+      backupMsg('export-msg','✓ Backup geteilt',true); return;
+    }
+  }catch(e){ if(e&&e.name==='AbortError') return; }
+  try{
+    const url=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+    const a=document.createElement('a'); a.href=url; a.download=name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    backupMsg('export-msg','✓ Datei '+name+' erstellt',true);
+  }catch{ backupMsg('export-msg','⚠ Export fehlgeschlagen, bitte „In Zwischenablage" nutzen',false); }
+}
+async function exportCopy(){
+  const json=backupJSON();
+  try{ await navigator.clipboard.writeText(json); backupMsg('export-msg','✓ In die Zwischenablage kopiert',true); }
+  catch{
+    const ta=document.getElementById('import-ta');
+    if(ta){ ta.value=json; ta.focus(); ta.select(); }
+    backupMsg('export-msg','Kopieren nicht erlaubt: JSON steht im Feld unten, bitte manuell kopieren.',false);
+  }
+}
+function importJSON(text){
+  let parsed;
+  try{ parsed=JSON.parse(text); }catch{ backupMsg('import-msg','⚠ Kein gültiges JSON',false); return; }
+  const arr=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.positionen)?parsed.positionen:null);
+  if(!arr){ backupMsg('import-msg','⚠ Keine Positionsliste gefunden',false); return; }
+  const valid=arr.filter(p=>p&&typeof p==='object'&&(p.id||p.ticker));
+  if(!valid.length){ backupMsg('import-msg','⚠ Backup enthält keine Positionen',false); return; }
+  const skipped=arr.length-valid.length;
+  if(!confirm(`${valid.length} Positionen importieren?\n\nAlle aktuellen Daten (${data.length} Positionen) werden ersetzt.`+(skipped?`\n${skipped} ungültige Einträge werden übersprungen.`:''))) return;
+  data=valid.map(p=>({...p,id:String(p.id||p.ticker),ticker:p.ticker||String(p.id),name:p.name||'',thema:p.thema||'',tags:Array.isArray(p.tags)?p.tags:[]}));
+  save(); selected=null; editData=null; editMode=false;
+  nav('dash'); showToast('✓ Import');
+}
+
 function bindEvents(){
   document.querySelectorAll('.earnings-row[data-id],.bn-chip[data-id],.pos-card[data-id]').forEach(el=>{
     el.addEventListener('click',()=>{ const p=data.find(x=>x.id===el.dataset.id); if(p){selected=p;editData={...p};editMode=false;currentView='detail';render();} });
@@ -620,6 +703,24 @@ function bindEvents(){
     if(!np.ticker){alert('Ticker ist Pflichtfeld');return;}
     data.push(np);save();nav('list');
   });
+
+  // Backup: export / import
+  const bEF=document.getElementById('btn-export-file'); if(bEF) bEF.addEventListener('click',exportFile);
+  const bEC=document.getElementById('btn-export-copy'); if(bEC) bEC.addEventListener('click',exportCopy);
+  const iF=document.getElementById('import-file');
+  const bIF=document.getElementById('btn-import-file');
+  if(bIF&&iF){
+    bIF.addEventListener('click',()=>iF.click());
+    iF.addEventListener('change',()=>{
+      const f=iF.files&&iF.files[0]; if(!f) return;
+      const r=new FileReader();
+      r.onload=()=>{ importJSON(String(r.result||'')); iF.value=''; };
+      r.onerror=()=>backupMsg('import-msg','⚠ Datei konnte nicht gelesen werden',false);
+      r.readAsText(f);
+    });
+  }
+  const bIT=document.getElementById('btn-import-text');
+  if(bIT) bIT.addEventListener('click',()=>{ const ta=document.getElementById('import-ta'); importJSON(ta?ta.value:''); });
 }
 
 load();
