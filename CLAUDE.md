@@ -28,7 +28,8 @@ Zweck: schnelle Notizen zu Aktien (Idee, Thesis, Links), dazu Bestand und Watchl
 - `renderDash()`, `renderList()`, `renderDetail()`, `renderNew()`, `renderMarkdown()`
 - `bindEvents()` – **eine einzige Funktion**, wird nach jedem `render()` aufgerufen
 - `renderBackup()`, `exportFile()`, `exportCopy()`, `importJSON()`
-- Views: `dash`, `list`, `watch`, `detail`, `new`, `backup`
+- `renderETF()`, `isETF()` (erkennt ETFs über Tag `etf` oder Name/Sektor mit ETF/ETC/UCITS/(Acc)/(Dist))
+- Views: `dash`, `list`, `etf`, `watch`, `detail`, `new`, `backup`
 
 ## Datenmodell einer Position
 ```
