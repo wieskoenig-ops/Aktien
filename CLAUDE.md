@@ -27,7 +27,8 @@ Zweck: schnelle Notizen zu Aktien (Idee, Thesis, Links), dazu Bestand und Watchl
 - `load()`, `save()`, `nav()`, `render()`
 - `renderDash()`, `renderList()`, `renderDetail()`, `renderNew()`, `renderMarkdown()`
 - `bindEvents()` – **eine einzige Funktion**, wird nach jedem `render()` aufgerufen
-- Views: `dash`, `list`, `watch`, `detail`, `new`
+- `renderBackup()`, `exportFile()`, `exportCopy()`, `importJSON()`
+- Views: `dash`, `list`, `watch`, `detail`, `new`, `backup`
 
 ## Datenmodell einer Position
 ```
@@ -54,7 +55,7 @@ Buckets (`scalable_thema`): Kern, Robotik, Deutschland, Tech International, Gesu
 - Datenmodell nur **additiv** erweitern. Neue Felder müssen bei alten gespeicherten Datensätzen fehlen dürfen (Defaults im Code).
 
 ## Offene Punkte
-1. **Export/Import als JSON** (Backup und Wiederherstellung). Hat Priorität, weil Claude Code die Daten im `localStorage` sonst nicht sieht und ein gelöschter Browser-Speicher alles vernichtet.
+1. ~~Export/Import als JSON~~ – erledigt: View `backup` (Header-Button „⇅ Backup“). Export als Datei (Share-Sheet auf dem iPad) oder Zwischenablage; Format `{app, version, exportiert, anzahl, positionen:[…]}`. Import akzeptiert dieses Format oder ein nacktes Array und **ersetzt** alle Daten (mit Rückfrage).
 2. Neue Positionen als JSON-Schnipsel importierbar machen (Merge nach `id`, bestehende Notizen nicht überschreiben).
 3. Suche auch in Notizen und Tags.
 4. Sortieroptionen in der Liste (Wert, Performance, nächstes Earnings).
