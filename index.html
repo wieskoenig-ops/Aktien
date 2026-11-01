@@ -32,6 +32,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
 .card-title { font-size: 11px; color: var(--text4); text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 14px; }
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+@media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
 .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 8px; text-align: center; }
 .stat-val { font-size: 28px; font-weight: 800; line-height: 1; }
 .stat-lbl { font-size: 9px; color: var(--text4); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
@@ -134,6 +135,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   <div id="nav">
     <button class="nav-tab" id="tab-dash" onclick="nav('dash')"><span class="nav-icon">◈</span><span class="nav-label">Dashboard</span></button>
     <button class="nav-tab" id="tab-list" onclick="nav('list')"><span class="nav-icon">☰</span><span class="nav-label">Positionen</span></button>
+    <button class="nav-tab" id="tab-etf" onclick="nav('etf')"><span class="nav-icon">▦</span><span class="nav-label">ETFs</span></button>
     <button class="nav-tab" id="tab-watch" onclick="nav('watch')"><span class="nav-icon">◎</span><span class="nav-label">Watchlist</span></button>
   </div>
 </div>
@@ -253,7 +255,7 @@ const INITIAL = [
   {id:"6762T",ticker:"6762.T",name:"TDK Corporation",sektor:"Elektronische Komponenten / Magnetmaterialien",thema:"HDD-Köpfe-Monopol / NdFeB-Magnete / REE",region:"Japan",währung:"JPY",status:"Beobachten",conviction:"moderat-bullish",bottleneck:true,bottleneck_typ:"HDD-Köpfe-Monopol + NdFeB-Oligopol ex-China",stück:null,positionswert:null,einstiegskurs:null,perf_pct:null,perf_eur:null,kgv_forward:40,kgv_median_5j:null,dividende:0.50,bewertung:"leicht-überbewertet",nächstes_earnings:"2026-08-05",catalyst:"Q1 FY2027 Earnings / REE-Diversifizierung",einstieg_ziel:"2900-3100",scalable_thema:"Bottleneck Watchlist",tags:["beobachten","bottleneck","japan","magnetmaterialien","ree"],notizen:"Kassettenband → Magnetmaterialien-Monopol (Ajinomoto-Analogie). Entry bei ¥2900-3100.",letzte_aktualisierung:"2026-06-17"},
 ];
 
-let data=[], currentView='dash', filterStatus='alle', filterBN='alle', filterRegion='alle', searchQ='', selected=null, editData=null, editMode=false;
+let data=[], currentView='dash', filterStatus='alle', filterBN='alle', filterRegion='alle', filterType='alle', searchQ='', selected=null, editData=null, editMode=false;
 
 function load(){
   try{ const s=localStorage.getItem(STORAGE_KEY); data=s?JSON.parse(s):INITIAL; }catch{ data=INITIAL; }
@@ -264,12 +266,18 @@ function save(toast=true){
   try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(data)); if(toast) showToast('✓'); }catch{ if(toast) showToast('⚠'); }
 }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; setTimeout(()=>t.textContent='',1800); }
-function nav(v){ currentView=v; ['dash','list','watch'].forEach(id=>{ const el=document.getElementById('tab-'+id); if(el) el.classList.toggle('active',id===v); }); render(); }
+function nav(v){ currentView=v; ['dash','list','etf','watch'].forEach(id=>{ const el=document.getElementById('tab-'+id); if(el) el.classList.toggle('active',id===v); }); render(); }
+function isETF(p){
+  if((p.tags||[]).some(t=>String(t).toLowerCase()==='etf')) return true;
+  return /\b(ETF|ETC|ETN|UCITS|EUWAX)\b|\((Acc|Dist)\)/i.test((p.name||'')+' '+(p.sektor||''));
+}
 function getFiltered(){
   const so=['Bestand','Beobachten','Watchlist','Verkauft'], co={hoch:0,'moderat-bullish':1,neutral:2,'neutral-spekulativ':3,'leicht-bullish':4};
   return [...data].filter(p=>{
     if(filterStatus==='alle'?p.status==='Verkauft':p.status!==filterStatus) return false;
     if(filterRegion!=='alle'&&p.region!==filterRegion) return false;
+    if(filterType==='etf'&&!isETF(p)) return false;
+    if(filterType==='aktien'&&isETF(p)) return false;
     if(filterBN==='ja'&&!p.bottleneck) return false;
     if(searchQ){ const q=searchQ.toLowerCase(); if(!p.ticker.toLowerCase().includes(q)&&!p.name.toLowerCase().includes(q)&&!p.thema.toLowerCase().includes(q)&&!(p.scalable_thema||'').toLowerCase().includes(q)) return false; }
     return true;
@@ -287,6 +295,7 @@ function render(){
   const main=document.getElementById('main');
   if(currentView==='dash') main.innerHTML=renderDash();
   else if(currentView==='list') main.innerHTML=renderList(getFiltered());
+  else if(currentView==='etf') main.innerHTML=renderETF();
   else if(currentView==='watch') main.innerHTML=renderList(data.filter(p=>p.status==='Beobachten'||p.status==='Watchlist'),true);
   else if(currentView==='detail') main.innerHTML=renderDetail();
   else if(currentView==='new') main.innerHTML=renderNew();
@@ -335,6 +344,8 @@ function renderList(items,watchOnly=false){
     <div class="filter-chips">
       ${['alle','Bestand','Beobachten','Watchlist','Verkauft'].map(s=>`<button class="chip ${filterStatus===s?'active-status':''}" data-status="${s}">${s==='alle'?'Alle':s}</button>`).join('')}
       <button class="chip ${filterBN==='ja'?'active-bn':''}" id="bn-toggle">▲ BN</button>
+      <button class="chip ${filterType==='aktien'?'active-status':''}" data-type="aktien">Aktien</button>
+      <button class="chip ${filterType==='etf'?'active-status':''}" data-type="etf">ETFs</button>
       <select class="region-select" id="region-sel"><option value="alle">Alle Regionen</option>${regions.map(r=>`<option value="${h(r)}" ${filterRegion===r?'selected':''}>${RF[r]||''} ${h(r)}</option>`).join('')}</select>
     </div>
     <div class="filter-count">${items.length} Positionen</div>`:`<div class="filter-count" style="margin-bottom:12px">${items.length} Positionen</div>`}
@@ -513,6 +524,32 @@ function renderNew(){
     </div>`;
 }
 
+function renderETF(){
+  const all=data.filter(p=>isETF(p)&&p.status!=='Verkauft');
+  const held=all.filter(p=>p.status==='Bestand').sort((a,b)=>(b.positionswert||0)-(a.positionswert||0));
+  const watch=all.filter(p=>p.status!=='Bestand');
+  const sum=held.reduce((s,p)=>s+(p.positionswert||0),0);
+  const perf=held.reduce((s,p)=>s+(p.perf_eur||0),0);
+  const total=data.filter(p=>p.status==='Bestand').reduce((s,p)=>s+(p.positionswert||0),0);
+  const cost=sum-perf;
+  const fmt=v=>Math.round(v).toLocaleString('de')+'€';
+  const bucket={}; held.forEach(p=>{const b=p.scalable_thema||'Ohne Bucket'; bucket[b]=(bucket[b]||0)+(p.positionswert||0);});
+  const rows=Object.entries(bucket).sort((a,b)=>b[1]-a[1]);
+  return `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" style="color:#22c55e">${held.length}</div><div class="stat-lbl">ETFs im Bestand</div></div>
+      <div class="stat-card"><div class="stat-val" style="font-size:20px">${fmt(sum)}</div><div class="stat-lbl">Wert</div></div>
+      <div class="stat-card"><div class="stat-val" style="font-size:20px"><span class="${perf>=0?'perf-pos':'perf-neg'}">${perf>=0?'+':''}${fmt(perf)}</span></div><div class="stat-lbl">Perf.${cost>0?' '+(perf>=0?'+':'')+(perf/cost*100).toFixed(1)+'%':''}</div></div>
+      <div class="stat-card"><div class="stat-val" style="font-size:20px;color:#3b82f6">${total?Math.round(sum/total*100):0}%</div><div class="stat-lbl">Anteil Bestand</div></div>
+    </div>
+    ${rows.length?`<div class="card">
+      <div class="card-title">ETF-Wert nach Bucket</div>
+      ${rows.map(([b,v])=>`<div class="region-row"><span class="r-name" style="width:150px">${h(b)}</span><div class="r-bar"><div class="r-fill" style="width:${sum?Math.round(v/sum*100):0}%"></div></div><span class="r-count" style="width:70px">${fmt(v)}</span></div>`).join('')}
+    </div>`:''}
+    <div class="card-title" style="margin:4px 0 10px">Im Bestand</div>
+    ${renderList(held,true)}
+    ${watch.length?`<div class="card-title" style="margin:18px 0 10px">Beobachten / Watchlist</div>${renderList(watch,true)}`:''}`;
+}
 function renderBackup(){
   const n=data.length, nb=data.filter(p=>p.status==='Bestand').length;
   return `
@@ -594,6 +631,7 @@ function bindEvents(){
   });
   document.querySelectorAll('[data-status]').forEach(el=>el.addEventListener('click',()=>{filterStatus=el.dataset.status;render();}));
   const bnT=document.getElementById('bn-toggle'); if(bnT) bnT.addEventListener('click',()=>{filterBN=filterBN==='ja'?'alle':'ja';render();});
+  document.querySelectorAll('[data-type]').forEach(el=>el.addEventListener('click',()=>{filterType=filterType===el.dataset.type?'alle':el.dataset.type;render();}));
   const rS=document.getElementById('region-sel'); if(rS) rS.addEventListener('change',()=>{filterRegion=rS.value;render();});
   const sI=document.getElementById('search-inp'); if(sI){sI.addEventListener('input',()=>{searchQ=sI.value;render();});}
 
