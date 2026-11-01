@@ -139,8 +139,8 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 </div>
 <script>
 const STORAGE_KEY = 'bottleneck-vault-v2';
-const SC = { Bestand:'#22c55e', Beobachten:'#f59e0b', Watchlist:'#3b82f6' };
-const RF = { Japan:'🇯🇵', USA:'🇺🇸', Deutschland:'🇩🇪', Europa:'🇪🇺', Taiwan:'🇹🇼', China:'🇨🇳', Norwegen:'🇳🇴', Dänemark:'🇩🇰', UK:'🇬🇧', Kanada:'🇨🇦', Frankreich:'🇫🇷', International:'🌍' };
+const SC = { Bestand:'#22c55e', Beobachten:'#f59e0b', Watchlist:'#3b82f6', Verkauft:'#64748b' };
+const RF = { Japan:'🇯🇵', USA:'🇺🇸', Deutschland:'🇩🇪', Europa:'🇪🇺', Taiwan:'🇹🇼', China:'🇨🇳', Norwegen:'🇳🇴', Dänemark:'🇩🇰', UK:'🇬🇧', Kanada:'🇨🇦', Frankreich:'🇫🇷', Schweiz:'🇨🇭', Schweden:'🇸🇪', Niederlande:'🇳🇱', Italien:'🇮🇹', Indien:'🇮🇳', Korea:'🇰🇷', Brasilien:'🇧🇷', International:'🌍' };
 
 // Einstiegskurs = Positionswert ÷ Stück (wo berechenbar aus Screenshots)
 const INITIAL = [
@@ -266,9 +266,9 @@ function save(toast=true){
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; setTimeout(()=>t.textContent='',1800); }
 function nav(v){ currentView=v; ['dash','list','watch'].forEach(id=>{ const el=document.getElementById('tab-'+id); if(el) el.classList.toggle('active',id===v); }); render(); }
 function getFiltered(){
-  const so=['Bestand','Beobachten','Watchlist'], co={hoch:0,'moderat-bullish':1,neutral:2,'neutral-spekulativ':3,'leicht-bullish':4};
+  const so=['Bestand','Beobachten','Watchlist','Verkauft'], co={hoch:0,'moderat-bullish':1,neutral:2,'neutral-spekulativ':3,'leicht-bullish':4};
   return [...data].filter(p=>{
-    if(filterStatus!=='alle'&&p.status!==filterStatus) return false;
+    if(filterStatus==='alle'?p.status==='Verkauft':p.status!==filterStatus) return false;
     if(filterRegion!=='alle'&&p.region!==filterRegion) return false;
     if(filterBN==='ja'&&!p.bottleneck) return false;
     if(searchQ){ const q=searchQ.toLowerCase(); if(!p.ticker.toLowerCase().includes(q)&&!p.name.toLowerCase().includes(q)&&!p.thema.toLowerCase().includes(q)&&!(p.scalable_thema||'').toLowerCase().includes(q)) return false; }
@@ -287,7 +287,7 @@ function render(){
   const main=document.getElementById('main');
   if(currentView==='dash') main.innerHTML=renderDash();
   else if(currentView==='list') main.innerHTML=renderList(getFiltered());
-  else if(currentView==='watch') main.innerHTML=renderList(data.filter(p=>p.status!=='Bestand'),true);
+  else if(currentView==='watch') main.innerHTML=renderList(data.filter(p=>p.status==='Beobachten'||p.status==='Watchlist'),true);
   else if(currentView==='detail') main.innerHTML=renderDetail();
   else if(currentView==='new') main.innerHTML=renderNew();
   else if(currentView==='backup') main.innerHTML=renderBackup();
@@ -299,7 +299,8 @@ function renderDash(){
   const oc=data.filter(p=>p.status==='Beobachten').length;
   const wc=data.filter(p=>p.status==='Watchlist').length;
   const bnc=data.filter(p=>p.bottleneck).length;
-  const upcoming=[...data].filter(p=>p.nächstes_earnings).sort((a,b)=>a.nächstes_earnings.localeCompare(b.nächstes_earnings)).slice(0,6);
+  const today=new Date().toISOString().slice(0,10);
+  const upcoming=[...data].filter(p=>p.nächstes_earnings&&p.nächstes_earnings>=today&&p.status!=='Verkauft').sort((a,b)=>a.nächstes_earnings.localeCompare(b.nächstes_earnings)).slice(0,6);
   const regionMap={};
   data.filter(p=>p.status==='Bestand').forEach(p=>{regionMap[p.region]=(regionMap[p.region]||0)+1;});
   const regions=Object.entries(regionMap).sort((a,b)=>b[1]-a[1]);
@@ -332,7 +333,7 @@ function renderList(items,watchOnly=false){
     ${!watchOnly?`
     <input class="search-input" id="search-inp" placeholder="Suche Ticker, Name, Thema, Bucket…" value="${h(searchQ)}">
     <div class="filter-chips">
-      ${['alle','Bestand','Beobachten','Watchlist'].map(s=>`<button class="chip ${filterStatus===s?'active-status':''}" data-status="${s}">${s==='alle'?'Alle':s}</button>`).join('')}
+      ${['alle','Bestand','Beobachten','Watchlist','Verkauft'].map(s=>`<button class="chip ${filterStatus===s?'active-status':''}" data-status="${s}">${s==='alle'?'Alle':s}</button>`).join('')}
       <button class="chip ${filterBN==='ja'?'active-bn':''}" id="bn-toggle">▲ BN</button>
       <select class="region-select" id="region-sel"><option value="alle">Alle Regionen</option>${regions.map(r=>`<option value="${h(r)}" ${filterRegion===r?'selected':''}>${RF[r]||''} ${h(r)}</option>`).join('')}</select>
     </div>
