@@ -568,6 +568,15 @@ function renderBackup(){
       <div class="backup-msg" id="export-msg"></div>
     </div>
     <div class="card">
+      <div class="card-title">Positionen ergänzen</div>
+      <div class="backup-text">Fügt nur <b>neue</b> Positionen hinzu (Abgleich über die ID). Bestehende Positionen und ihre Notizen bleiben unverändert. JSON-Schnipsel einfügen: eine Position, eine Liste oder ein Backup.</div>
+      <textarea class="backup-ta" id="merge-ta" placeholder="JSON-Schnipsel hier einfügen …"></textarea>
+      <div class="backup-btns">
+        <button class="btn-save" id="btn-merge-text">Neue Positionen ergänzen</button>
+      </div>
+      <div class="backup-msg" id="merge-msg"></div>
+    </div>
+    <div class="card">
       <div class="card-title">Import (Wiederherstellen)</div>
       <div class="backup-text">Ersetzt <b>alle</b> aktuellen Daten durch das Backup. Datei wählen oder JSON unten einfügen.</div>
       <div class="backup-btns">
@@ -624,6 +633,28 @@ function importJSON(text){
   data=valid.map(p=>({...p,id:String(p.id||p.ticker),ticker:p.ticker||String(p.id),name:p.name||'',thema:p.thema||'',tags:Array.isArray(p.tags)?p.tags:[]}));
   save(); selected=null; editData=null; editMode=false;
   nav('dash'); showToast('✓ Import');
+}
+function mergeJSON(text){
+  let parsed;
+  try{ parsed=JSON.parse(text); }catch{ backupMsg('merge-msg','⚠ Kein gültiges JSON',false); return; }
+  const arr=Array.isArray(parsed)?parsed:(parsed&&Array.isArray(parsed.positionen)?parsed.positionen:(parsed&&typeof parsed==='object'?[parsed]:null));
+  if(!arr){ backupMsg('merge-msg','⚠ Keine Position gefunden',false); return; }
+  const valid=arr.filter(p=>p&&typeof p==='object'&&(p.id||p.ticker));
+  if(!valid.length){ backupMsg('merge-msg','⚠ Keine gültige Position im JSON',false); return; }
+  const today=new Date().toISOString().slice(0,10);
+  const known=new Set(data.map(p=>String(p.id)));
+  const added=[], dup=[];
+  valid.forEach(p=>{
+    const id=String(p.id||p.ticker);
+    if(known.has(id)){ dup.push(id); return; }
+    known.add(id);
+    added.push({...p,id,ticker:p.ticker||id,name:p.name||'',thema:p.thema||'',tags:Array.isArray(p.tags)?p.tags:[],letzte_aktualisierung:p.letzte_aktualisierung||today});
+  });
+  if(!added.length){ backupMsg('merge-msg','Nichts ergänzt: '+dup.length+' bereits vorhanden ('+dup.join(', ')+')',false); return; }
+  data=data.concat(added); save();
+  const ta=document.getElementById('merge-ta'); if(ta) ta.value='';
+  backupMsg('merge-msg','✓ '+added.length+' ergänzt ('+added.map(p=>p.ticker).join(', ')+')'+(dup.length?', '+dup.length+' bereits vorhanden und übersprungen ('+dup.join(', ')+')':''),true);
+  showToast('✓ Ergänzt');
 }
 
 function bindEvents(){
@@ -761,6 +792,8 @@ function bindEvents(){
   }
   const bIT=document.getElementById('btn-import-text');
   if(bIT) bIT.addEventListener('click',()=>{ const ta=document.getElementById('import-ta'); importJSON(ta?ta.value:''); });
+  const bMT=document.getElementById('btn-merge-text');
+  if(bMT) bMT.addEventListener('click',()=>{ const ta=document.getElementById('merge-ta'); mergeJSON(ta?ta.value:''); });
 }
 
 load();

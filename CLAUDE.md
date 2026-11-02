@@ -57,7 +57,7 @@ Buckets (`scalable_thema`): Kern, Robotik, Deutschland, Tech International, Gesu
 
 ## Offene Punkte
 1. ~~Export/Import als JSON~~ – erledigt: View `backup` (Header-Button „⇅ Backup“). Export als Datei (Share-Sheet auf dem iPad) oder Zwischenablage; Format `{app, version, exportiert, anzahl, positionen:[…]}`. Import akzeptiert dieses Format oder ein nacktes Array und **ersetzt** alle Daten (mit Rückfrage).
-2. Neue Positionen als JSON-Schnipsel importierbar machen (Merge nach `id`, bestehende Notizen nicht überschreiben).
+2. ~~Neue Positionen als JSON-Schnipsel importierbar machen~~ – erledigt: View `backup`, Karte „Positionen ergänzen“ (`mergeJSON()`). Akzeptiert ein einzelnes Objekt, eine Liste oder ein Backup. Ergänzt nur ids, die noch fehlen; bestehende Positionen und Notizen bleiben unverändert. Damit erreichen neue Positionen auch bestehende Geräte (Regel 3 gilt nur für `INITIAL`).
 3. Suche auch in Notizen und Tags.
 4. Sortieroptionen in der Liste (Wert, Performance, nächstes Earnings).
 
